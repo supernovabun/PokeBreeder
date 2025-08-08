@@ -2,12 +2,13 @@ import re
 
 class Item:
 	item_id = {}
-	def __init__(self, name, item_type, room, value, gettable=True):
+	def __init__(self, name, item_type, room, value, gettable=True, container=False):
 		self.name = name.title()
 		self.item_type = item_type.title() if item_type.title() not in ["Food", "Held Item", "Medicine", "Painting", "Statue", "Drawing", "Misc."] else "Misc."
 		self.room = room
 		self.base_value = int(value)
 		self.gettable = gettable
+		self.container = container
 		if len(Item.item_id.keys()) == 0:
 			self.item_id = f"{name.title()}"+"{:04d}".format(1)
 		else:
@@ -23,4 +24,5 @@ class Item:
 		self.description = desc
 
 	def get_desc(self):
+
 		return(self.description)
