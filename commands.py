@@ -156,28 +156,18 @@ class CommandParser:
 		if not args:
 			print(f"What are you trying to {user_cmd}?")
 		else:
-			for thing in self.player.room.inventory:
-				if args[0].title() == thing and thing in Pokemon.pkmn_id.keys():
-					Pokemon.pkmn_id[thing].receive_affection(user_cmd)
+			pkmn_present = [pkmn for pkmn in self.player.room.inventory if re.findall("^[a-zA-Z \\-\\']+\\d{6}$", pkmn) != []]
+			for pkmn in pkmn_present:
+				if args[0].title() == pkmn:
+					Pokemon.pkmn_id[pkmn].receive_affection(user_cmd)
 					return
-				elif args[0] == re.findall("\\d{6}$", thing)[0]:
-					if thing in Pokemon.pkmn_id.keys():
-						Pokemon.pkmn_id[thing].receive_affection(user_cmd)
-						return
-					else:
-						print(f"That's not a Pokemon you're trying to {user_cmd}...")
-						return
-				elif args[0].title() == re.findall("^[a-zA-Z \\-\\']+", thing)[0]:
-					if thing in Pokemon.pkmn_id.keys():
-						Pokemon.pkmn_id[thing].receive_affection(user_cmd)
-						return
-					else:
-						print("That's not a Pokemon you're trying to pet...")
-						return
-				else:
-					print(f"Args: {args}")
-					print(f"Present:{thing}")
+				elif args[0] in re.findall("\\d{6}$", pkmn):
+					Pokemon.pkmn_id[pkmn].receive_affection(user_cmd)
 					return
+				elif args[0].title() in re.findall("^[a-zA-Z \\-\\']+", pkmn):
+					Pokemon.pkmn_id[pkmn].receive_affection(user_cmd)
+					return
+			print("That's not a Pokemon you're trying to pet...")
 
 	def handle_feed(self, args):
 		if len(args) == 0:
@@ -385,3 +375,4 @@ class CommandParser:
 		else:
 			article = "a "
 		return(article)
+
