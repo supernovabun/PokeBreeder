@@ -53,7 +53,9 @@ class CommandParser:
 			"put": self.handle_put,
 			"stat": self.handle_status,
 			"status": self.handle_status,
-			"score": self.handle_status
+			"score": self.handle_status,
+			"help": self.handle_help,
+			"sleep": self.handle_sleep
 		}
 
 	def parse(self, text):
@@ -183,18 +185,29 @@ class CommandParser:
 					print(f"What are you trying to feed to {args[0][:-6]}")
 			elif args[0].title() in pkmn_present and args[0].title() not in Pokemon.pkmn_id.keys():
 				print(f"There is no such {args[0][:-6]} that exists - is that a ghost?")
-			elif [pkmn for pkmn in pkmn_present if re.findall("\\d{6}$", args[0])] != 0:
-				pkmn = [pkmn for pkmn in pkmn_present if re.findall("\\d{6}$", pkmn) != []][0]
+			elif [pkmn for pkmn in pkmn_present if re.findall(f"{args[0]}$", pkmn) != []] != []:
+				pkmn = [pkmn for pkmn in pkmn_present if re.findall(f"{args[0]}$", pkmn) != []][0]
 				if args[1]:
 					food = " ".join(args[1:]).title()
-					Pokemon.pkmn_id[pkmn].feed(food)
+					food = [f for f in self.player.inventory if re.findall(food, f) != []][0]
+					if Item.item_id[food].item_type == "Food":
+						Pokemon.pkmn_id[pkmn].feed(food)
+					else:
+						print("Why are you trying to feed Pokemon inedible objects?")
 				else:
 					print(f"What are you trying to feed to {pkmn[:-6]}?")
-			elif args[0].title() in [pkmn for pkmn in pkmn_present if re.findall("^[a-zA-Z \\-\\']+", args[0].title())]:
+			elif [pkmn for pkmn in pkmn_present if re.findall(f"^{args[0].title()}", pkmn) != []]:
 				pkmn = [pkmn for pkmn in pkmn_present if re.findall("^[a-zA-Z \\-\\']+", args[0].title()) != []][0]
 				if args[1]:
 					food = " ".join(args[1:]).title()
-					Pokemon.pkmn_id[pkmn].feed(food)
+					if [f for f in self.player.inventory if re.findall(food, f) != []] != []:
+						food = [f for f in self.player.inventory if re.findall(food, f) != []][0]
+						if Item.item_id[food].item_type == "Food":
+							Pokemon.pkmn_id[pkmn].feed(food)
+						else:
+							print("Why are you trying to feed Pokemon inedible objects?")
+					else:
+						print(f"You're not holding any {food.lower()} to feed {Pokemon.pkmn_id[pkmn].name}.")
 				else:
 					print(f"What are you trying to feed to {pkmn[:-6]}?")
 			else:
@@ -363,6 +376,52 @@ class CommandParser:
 	def handle_status(self, args):
 		pass
 
+	def handle_sleep(self, args):
+		pass
+
+	def handle_help(self, args):
+		GREEN = "\033[92m"
+		RESET = "\033[0m"
+		if not args:
+			print(f"{GREEN}Need help with commands? This is the spot for you. Here's a list of all available commands:{RESET}")
+			print(f"{GREEN}{", ".join(sorted(self.commands.keys()))}{RESET}")
+		else:
+			if args[0] in self.commands.keys():
+				if args[0] in ["l", "look"]:
+					print(f"{GREEN}Syntax: l, look\nTargetted: optional\nDisplays a description of whatever you're looking at.{RESET}")
+				elif args[0] in ["n", "north", "ne", "northeast", "e", "east", "se", "southeast", "s", "south", "sw", "southwest", "w", "west", "nw", "northwest", "up", "down", "in", "out"]:
+					print(f"{GREEN}Syntax: n, north, ne, northeast, e, east, se, southeast, s, south, sw, southwest, w, west, nw, northwest, up, down, in, out\nTargetted: No\nMoves your player in a given direction - provided there's an exit for it.{RESET}")
+				elif args[0] in ["pet", "cuddle", "snuggle", "hug"]:
+					print(f"{GREEN}Syntax: pet, cuddle, snuggle, hug\nTargetted: Required (pet <Pokemon>)\nDote affection on your Pokemon to build up trust and care.{RESET}")
+				elif args[0] == "say":
+					print(f"{GREEN}Syntax: say\nTargetted: No (say I like to talk!)\nSay whatever you like, but watch out! People might be listening!{RESET}")
+				elif args[0] in ["yes", "no"]:
+					print(f"{GREEN}Syntax: yes, no\nTargetted: No\nRespond to the world around you with a nod or shake of your head.{RESET}")
+				elif args[0] == "feed":
+					print(f"{GREEN}Syntax: feed\nTargetted: Required (feed <Pokemon> <food>)\nHow you make sure you don't starve your Pokemon every day. Remember to feed them regularly!{RESET}")
+				elif args[0] in ["exit", "qq", "quit"]:
+					print(f"{GREEN}Syntax: exit, qq, quit\nTargetted: No\nHow you close out of the game.{RESET}")
+				elif args[0] in ["here", "ih"]:
+					print(f"{GREEN}Syntax: here, ih\nTargetted: No\nSee what items are present.{RESET}")
+				elif args[0] in ["inventory", "inv", "ii"]:
+					print(f"{GREEN}Syntax: inventory, inv, ii\nTargetted: No\nLook at your personal inventory.{RESET}")
+				elif args[0] in ["get", "take"]:
+					print(f"{GREEN}Syntax: get, take\nTargetted: Yes (get <item>(from <container>))\nPick up an item from the ground or take an item out of a container.{RESET}")
+				elif args[0] in ["drop", "place"]:
+					print(f"{GREEN}Syntax: drop, place\nTargetted: No (drop <item>)\nLet an item fall to the ground.{RESET}")
+				elif args[0] == "put":
+					print(f"{GREEN}Syntax: put\nTargetted: Yes (put <item> in <container>)\nPut an item into a container.{RESET}")
+				elif args[0] in ["stat", "status", "score"]:
+					print(f"{GREEN}Syntax: status, stat, score\nTargetted: no\nShows some information about yourself.{RESET}")
+				elif args[0] == "help":
+					print(f"{GREEN}Syntax: help\nTargetted: No (help( <command>))\nYOU ARE HERE! Reveals the help system. Without a command, it'll list all the available commands.{RESET}")
+				elif args[0] == "sleep":
+					print(f"{GREEN}Syntax: sleep\nTargetted: No\nGets some energy back. Best to do this in a room with a bed...{RESET}")
+				else:
+					print(f"{GREEN}Someone forgot to program the rest of these help lines in...{RESET}")
+			else:
+				print(f"{GREEN}I cannot help you with the sort of help you need...{RESET}")
+
 	def handle_quit(self, args):
 		print("You decide it's time for a break and to tend to yourself. Your Pokemon will eagerly await your return.")
 		sys.exit()
@@ -375,4 +434,3 @@ class CommandParser:
 		else:
 			article = "a "
 		return(article)
-
