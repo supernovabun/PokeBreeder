@@ -15,7 +15,7 @@ class Room:
 			rooms_keys = [re.findall("\\d{3}", k)[0] for k in rooms_keys]
 			rooms_keys = sorted(rooms_keys)
 			room_last = rooms_keys[-1]
-			self.room_id = f"{room_id}" + "{:02d}".format(int(room_last)+1)
+			self.room_id = f"{room_id}" + "{:03d}".format(int(room_last)+1)
 		Room.rooms[self.room_id] = self
 
 	def set_verbose(self, verbose_desc):
