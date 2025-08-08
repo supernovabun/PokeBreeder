@@ -206,7 +206,9 @@ class Pokemon:
 		"Serious",
 		"Timid"
 		]
-		if self.mother != "Unknown" and self.father != "Unknown":
+		if method in natures:
+			self.nature = natures[method]
+		elif self.mother != "Unknown" and self.father != "Unknown":
 			if self.mother.held_item == "Everstone" and self.father.held_item == "Everstone":
 				self.nature = random.choice([self.mother.nature, self.father.nature])
 			elif self.mother.held_item == "Everstone":
@@ -309,4 +311,5 @@ class Pokemon:
 		print("+"+("-"*(total_length-1))+"+")
 
 	def get_description(self):
+
 		print(self.description)
