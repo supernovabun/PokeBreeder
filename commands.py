@@ -329,16 +329,19 @@ class CommandParser:
 					where_put = [w for w in self.player.inventory if re.findall(where_put, w) != []][0]
 					where_put = Item.item_id[where_put]
 				elif [w for w in self.player.room.inventory if re.findall(where_put, w) != []] != []:
-					where_put = [w for w in self.player.room.inventory if re.findall(where_put, w) != []]
-					where_put = Item.item_id[where_put]
+					where_put = [w for w in self.player.room.inventory if re.findall(where_put, w) != []][0]
+					where_put = Item.item_id[where_put] if where_put in Item.item_id.keys() else Pokemon.pkmn_id[where_put]
 				else:
 					print(f"Where are you trying to put {to_put.lower()}?")
-					return
+					return()
 				if [i for i in self.player.inventory if re.findall(to_put, i) != []] != []:
 					to_put = [i for i in self.player.inventory if re.findall(to_put, i) != []][0]
 					to_put = Item.item_id[to_put]
-					if where_put.container:
+					if isinstance(where_put, Item) and where_put.container:
 						self.player.remove_inventory(to_put.item_id)
+					else:
+						print(f"You can't put items into {where_put.name}!")
+						return
 				else:
 					print(f"You are not holding {self.get_article(to_put)}{to_put.lower()}.")
 					return
@@ -351,7 +354,7 @@ class CommandParser:
 					where_put = Item.item_id[where_put]
 				elif [w for w in self.player.room.inventory if re.findall(where_put, w) != []] != []:
 					where_put = [w for w in self.player.room.inventory if re.findall(where_put, w) != []]
-					where_put = Item.item_id[where_put]
+					where_put = Item.item_id[where_put] if where_put in Item.item_id.keys() else Pokemon.pkmn_id[where_put]
 				else:
 					print(f"Where are you trying to put {to_put.lower()}")
 					return
