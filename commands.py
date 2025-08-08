@@ -145,6 +145,9 @@ class CommandParser:
 			cmd = user_cmd
 		if cmd in self.player.room.exits.keys():
 			self.player.room = self.player.room.exits[cmd]
+			for each_item in self.player.inventory:
+				each_item = Item.item_id[each_item]
+				each_item.room = self.player.room
 			self.player.room.display()
 		else:
 			print(f"As much as you wish to head {cmd}, you cannot.")
@@ -257,6 +260,28 @@ class CommandParser:
 					item_article = self.get_article(to_remove)
 					self.player.add_inventory(to_remove)
 					print(f"You pick up {item_article}{to_remove[:-4].lower()}.")
+		elif "from" in args:
+			to_get = " ".join(args[:args.index("from")]).title()
+			from_where = " ".join(args[args.index("from")+1:]).title()
+			if [w for w in self.player.inventory if re.findall(from_where, w) != []] != []:
+				from_where = [w for w in self.player.inventory if re.findall(from_where, w) != []][0]
+				from_where_item = Item.item_id[from_where]
+			elif [w for w in self.player.room.inventory if re.findall(from_where, w) != []] != []:
+				from_where = [w for w in self.player.room.inventory if re.findall(from_where, w) != []][0]
+				from_where_item = Item.item_id[from_where]
+			else:
+				print(f"There is nothing around by name of {from_where}.")
+			if [i for i in from_where_item.inventory if re.findall(to_get, i) != []] != []:
+				to_get = [i for i in from_where_item.inventory if re.findall(to_get, i) != []][0]
+				to_get = Item.item_id[to_get]
+				from_where_item.remove_inventory(to_get.item_id)
+				print(f"You take out {to_get.get_article()}{to_get.name.lower()} from {from_where_item.get_article()}{from_where_item.name.lower()}.")
+			else:
+				print(f"{from_where_item.name[0]+from_where_item.name[1:].lower()} does not hold {self.get_article(to_get)}{to_get.lower()}.")
+				return
+			self.player.add_inventory(to_get)
+			if len(self.player.inventory) > 10:
+				self.handle_drop(to_get.item_id)
 		else:
 			get_string = " ".join([arg.title() for arg in args])
 			if get_string in self.player.room.inventory and get_string not in Pokemon.pkmn_id.keys():
@@ -297,7 +322,50 @@ class CommandParser:
 			if args[-2] in ["in", "on"]:
 				self.handle_drop(args[:-2])
 		else:
-			pass
+			if "in" in args:
+				to_put = " ".join(args[:args.index("in")]).title()
+				where_put = " ".join(args[args.index("in")+1:]).title()
+				if [w for w in self.player.inventory if re.findall(where_put, w) != []] != []:
+					where_put = [w for w in self.player.inventory if re.findall(where_put, w) != []][0]
+					where_put = Item.item_id[where_put]
+				elif [w for w in self.player.room.inventory if re.findall(where_put, w) != []] != []:
+					where_put = [w for w in self.player.room.inventory if re.findall(where_put, w) != []]
+					where_put = Item.item_id[where_put]
+				else:
+					print(f"Where are you trying to put {to_put.lower()}?")
+					return
+				if [i for i in self.player.inventory if re.findall(to_put, i) != []] != []:
+					to_put = [i for i in self.player.inventory if re.findall(to_put, i) != []][0]
+					to_put = Item.item_id[to_put]
+					if where_put.container:
+						self.player.remove_inventory(to_put.item_id)
+				else:
+					print(f"You are not holding {self.get_article(to_put)}{to_put.lower()}.")
+					return
+				where_put.add_inventory(to_put)
+			elif len(args) == 2:
+				to_put = args[0].title()
+				where_put = args[1].title()
+				if [w for w in self.player.inventory if re.findall(where_put, w) != []] != []:
+					where_put = [w for w in self.player.inventory if re.findall(where_put, w) != []][0]
+					where_put = Item.item_id[where_put]
+				elif [w for w in self.player.room.inventory if re.findall(where_put, w) != []] != []:
+					where_put = [w for w in self.player.room.inventory if re.findall(where_put, w) != []]
+					where_put = Item.item_id[where_put]
+				else:
+					print(f"Where are you trying to put {to_put.lower()}")
+					return
+				if [i for i in self.player.inventory if re.findall(to_put, i) != []] != []:
+					to_put = [i for i in self.player.inventory if re.findall(to_put, i) != []][0]
+					to_put = Item.item_id[to_put]
+					self.player.remove_inventory(to_put.item_id)
+				else:
+					print(f"You are not holding {self.get_article(to_put)}{to_put.lower()}.")
+					return
+				where_put.add_inventory(to_put)
+			else:
+				print(f"Where are you trying to put {self.get_article(" ".join(args))}{" ".join(args)}? Did you forget IN?")
+				return
 
 	def handle_status(self, args):
 		pass
