@@ -1,6 +1,10 @@
 # PokeBreeder
 This ~~ambitious~~ insane project is for creating a single-player text game where you breed and raise Pokemon! I don't have everything figured out yet, but it's a start.
 
+## Currently...
+
+As of writing this, you can run main.py without error (unless you're creative). You can move between the two rooms I've created, you have a Bulbasaur that's just sitting in your bedroom, and there's a painting in the hallway. You can also look at Bulbasaur, the rooms, and the painting. You can grab the painting too, but why would you ever do that? You can also speak, but nothing really cool happens there.
+
 ## Features
 * [ ] Tutorials
 * [ ] All the breedable Pokemon:
