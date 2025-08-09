@@ -2,24 +2,29 @@ import re
 
 class Item:
 	item_id = {}
-	def __init__(self, name, item_type, room, value, gettable=True, container=False):
+	item_num = 1
+	def __init__(self, name, item_type, room, value, item_id=None, gettable=True, container=False):
 		self.name = name.title()
 		self.item_type = item_type.title() if item_type.title() not in ["Food", "Furniture", "Held Item", "Medicine", "Painting", "Statue", "Drawing", "Misc."] else "Misc."
 		self.room = room
+		self.in_somewhere = False
 		self.base_value = int(value)
 		self.gettable = gettable
 		self.container = container
 		self.inventory = [] if container else None
-		if len(Item.item_id.keys()) == 0:
-			self.item_id = f"{name.title()}"+"{:04d}".format(1)
+		if item_id:
+			self.item_id = item_id
 		else:
+			self.item_id = f"{name.title()}{Item.item_num:04d}"
+			Item.item_num += 1
+		"""else:
 			item_id_keys = Item.item_id.keys()
 			item_id_keys = [re.findall("\\d{4}", k)[0] for k in item_id_keys]
 			item_id_keys = sorted(item_id_keys)
 			item_last = item_id_keys[-1]
-			self.item_id = f"{name.title()}"+"{:04d}".format(int(item_last)-1)
+			self.item_id = f"{name.title()}"+"{:04d}".format(int(item_last)-1)"""
 		Item.item_id[self.item_id] = self
-		if self.room:
+		if self.room and type(self.room) != type(" "):
 			self.room.add_inventory(self.item_id)
 
 	def set_desc(self, desc):
@@ -55,6 +60,7 @@ class Item:
 				self.inventory.append(to_add.item_id)
 			else:
 				self.inventory = [to_add.item_id]
+			to_add.in_somewhere = self
 			print(f"You carefully place {to_add.get_article()}{to_add.name.lower()} inside of {self.get_article()}{self.name.lower()}.")
 		else:
 			print(f"{self.name[0]+self.name[1:].lower()} will not fit {to_add.get_article()}{to_add.name.lower()}, no matter how hard you may try.")
@@ -67,3 +73,25 @@ class Item:
 				print(f"{self.name} has nothing inside of it.")
 		else:
 			print(f"{self.name} cannot and does not hold anything inside of it.")
+
+	def to_dict(self):
+		return({
+			"item_id": self.item_id,
+			"name": self.name,
+			"item_type": self.item_type,
+			"room": self.room if type(self.room) == type(" ") or self.room == None else self.room.room_id,
+			"desc": self.description,
+			"in_somewhere": self.in_somewhere.item_id if self.in_somewhere else self.in_somewhere,
+			"base_value": self.base_value,
+			"gettable": self.gettable,
+			"container": self.container,
+			"inventory": [i if type(i) == type(" ") else i.item_id for i in self.inventory] if self.inventory else self.inventory
+		})
+
+	@staticmethod
+	def from_dict(data):
+		loaded_item = Item(data["name"], data["item_type"], data["room"], data["base_value"], item_id=data["item_id"], gettable=data["gettable"], container=data["container"])
+		loaded_item.in_somewhere_string = data["in_somewhere"]
+		loaded_item.inventory = data["inventory"]
+		loaded_item.set_desc(data["desc"])
+		return(loaded_item)
