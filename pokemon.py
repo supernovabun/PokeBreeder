@@ -235,7 +235,8 @@ class Pokemon:
 			self.affection += 1
 
 	def feed(self, food):
-		if self.fullness >= 100 and self.room == self.trainer.room:
+		food = food.title()
+		if self.fullness >= 25 and self.room == self.trainer.room:
 			print(f"{self.name} rejects all offers of food. They're not hungry.")
 		else:
 			if food not in self.daily_food and food in self.room.inventory:
@@ -243,17 +244,21 @@ class Pokemon:
 				self.fullness += 10
 				self.affection += 2
 			elif food not in self.daily_food and self.room == self.trainer.room and food in self.trainer.inventory:
-				self.daily_food.append(self.trainer.inventory.pop(self.trainer.inventory.index(food)))
-				self.fullness += 10
-				self.affection += 2
+				if self.trainer.check_energy():
+					self.trainer.energy -= 1
+					self.daily_food.append(self.trainer.inventory.pop(self.trainer.inventory.index(food)))
+					self.fullness += 10
+					self.affection += 2
 			elif food in self.daily_food and food in self.room.inventory:
 				self.daily_food.append(self.room.inventory.pop(self.room.inventory.index(food)))
 				self.fullness += 5
 				self.affection += 1
 			elif food in self.daily_food and self.room == self.trainer.room and food in self.trainer.inventory:
-				self.daily_food.append(self.trainer.inventory.pop(self.trainer.inventory.index(food)))
-				self.fullness += 5
-				self.affection += 1
+				if self.trainer.check_energy():
+					self.trainer.energy -= 1
+					self.daily_food.append(self.trainer.inventory.pop(self.trainer.inventory.index(food)))
+					self.fullness += 5
+					self.affection += 1
 			else:
 				if food not in self.room.inventory and self.room == self.trainer.room:
 					if food not in self.trainer.inventory:
@@ -267,7 +272,14 @@ class Pokemon:
 		self.fullness = 0
 
 	def update_loved(self):
-		self.loved += int(self.daily_affection/2)
+		if self.fullness >= 25:
+			self.loved += 1
+		elif self.fullness <= 0:
+			self.loved -= 5
+		if self.affection > 0:
+			self.loved += int(self.affection/2)
+		else:
+			self.loved += -5
 
 	def display_genetics(self):
 		nametag = "%s the %s" % (self.name, self.species)
@@ -311,5 +323,4 @@ class Pokemon:
 		print("+"+("-"*(total_length-1))+"+")
 
 	def get_description(self):
-
 		print(self.description)
