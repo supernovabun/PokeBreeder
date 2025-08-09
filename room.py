@@ -49,6 +49,10 @@ class Room:
 		return(to_remove)
 
 	def display(self):
-		print(self.brief)
-		print(self.verbose)
-		print(f"Exits: {self.get_exits()}.")
+		DARK_GREEN = "\x1b[38;5;22m"
+		LIGHT_GREEN = "\x1b[38;5;34m"
+		MED_GRAY = "\x1b[38;5;248m"
+		RESET = "\033[0m"
+		print(f"{DARK_GREEN}{self.brief}{RESET}")
+		print(f"{MED_GRAY}{self.verbose}{RESET}")
+		print(f"{LIGHT_GREEN}Exits{RESET}: {self.get_exits()}.")
