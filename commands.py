@@ -55,7 +55,8 @@ class CommandParser:
 			"status": self.handle_status,
 			"score": self.handle_status,
 			"help": self.handle_help,
-			"sleep": self.handle_sleep
+			"sleep": self.handle_sleep,
+			"use": self.handle_use
 		}
 
 	def parse(self, text):
@@ -146,11 +147,15 @@ class CommandParser:
 		else:
 			cmd = user_cmd
 		if cmd in self.player.room.exits.keys():
-			self.player.room = self.player.room.exits[cmd]
-			for each_item in self.player.inventory:
-				each_item = Item.item_id[each_item]
-				each_item.room = self.player.room
-			self.player.room.display()
+			if self.player.check_energy():
+				self.player.energy -= 1
+				self.player.room = self.player.room.exits[cmd]
+				for each_item in self.player.inventory:
+					each_item = Item.item_id[each_item]
+					each_item.room = self.player.room
+				self.player.room.display()
+			else:
+				return
 		else:
 			print(f"As much as you wish to head {cmd}, you cannot.")
 
@@ -161,13 +166,19 @@ class CommandParser:
 			pkmn_present = [pkmn for pkmn in self.player.room.inventory if re.findall("^[a-zA-Z \\-\\']+\\d{6}$", pkmn) != []]
 			for pkmn in pkmn_present:
 				if args[0].title() == pkmn:
-					Pokemon.pkmn_id[pkmn].receive_affection(user_cmd)
+					if self.player.check_energy():
+						self.player.energy -= 1
+						Pokemon.pkmn_id[pkmn].receive_affection(user_cmd)
 					return
 				elif args[0] in re.findall("\\d{6}$", pkmn):
-					Pokemon.pkmn_id[pkmn].receive_affection(user_cmd)
+					if self.player.check_energy():
+						self.player.energy -= 1
+						Pokemon.pkmn_id[pkmn].receive_affection(user_cmd)
 					return
 				elif args[0].title() in re.findall("^[a-zA-Z \\-\\']+", pkmn):
-					Pokemon.pkmn_id[pkmn].receive_affection(user_cmd)
+					if self.player.check_energy():
+						self.player.energy -= 1
+						Pokemon.pkmn_id[pkmn].receive_affection(user_cmd)
 					return
 			print("That's not a Pokemon you're trying to pet...")
 
@@ -214,7 +225,7 @@ class CommandParser:
 				print(f"The Pokemon you're looking for - {args[0].title()} - is not present.")
 
 	def handle_say(self, args):
-		CYAN = "\033[36m"
+		CYAN = "\x1b[38;5;51m"
 		RESET = "\033[0m"
 		if len(args) < 1:
 			print("You open your mouth, but you say nothing.")
@@ -246,11 +257,16 @@ class CommandParser:
 
 	def handle_get(self, args):
 		if len(args) == 1:
-			if args[0] in self.player.room.inventory and args[0] not in Pokemon.pkmn_id.keys():
-				to_remove = self.player.room.remove_inventory(args[0])
-				item_article = self.get_article(to_remove)
-				self.player.add_inventory(to_remove)
-				print(f"You pick up {item_article}{to_remove}.")
+			if args[0].title() in self.player.room.inventory and args[0].title() not in Pokemon.pkmn_id.keys():
+				if not Item.item_id[args[0]].gettable:
+					print(f"Try as you might, you cannot pick up {Item.item_id[args[0]].get_article()}{args[0]}.")
+					return
+				if self.player.check_energy():
+					self.player.energy -= 1
+					to_remove = self.player.room.remove_inventory(args[0])
+					item_article = self.get_article(to_remove)
+					self.player.add_inventory(to_remove)
+					print(f"You pick up {item_article}{to_remove}.")
 			elif [i for i in self.player.room.inventory if re.findall(args[0].title(), i) != []] != []:
 				to_remove = [i for i in self.player.room.inventory if re.findall(args[0].title(), i) != []]
 				to_remove = [i for i in to_remove if i not in Pokemon.pkmn_id.keys()]
@@ -259,10 +275,15 @@ class CommandParser:
 				elif len(to_remove) > 1:
 					print(f"Did you mean to get one of these? {", ".join(to_remove)}")
 				else:
-					to_remove = self.player.room.remove_inventory(to_remove[0])
-					item_article = self.get_article(to_remove)
-					self.player.add_inventory(to_remove)
-					print(f"You pick up {item_article}{to_remove[:-4].lower()}.")
+					if not Item.item_id[to_remove[0]].gettable:
+						print(f"Try as you might, you cannot pick up {Item.item_id[to_remove[0]].get_article()}{Item.item_id[to_remove[0]].name.lower()}.")
+						return
+					if self.player.check_energy():
+						self.player.energy -= 1
+						to_remove = self.player.room.remove_inventory(to_remove[0])
+						item_article = self.get_article(to_remove)
+						self.player.add_inventory(to_remove)
+						print(f"You pick up {item_article}{to_remove[:-4].lower()}.")
 		elif "from" in args:
 			to_get = " ".join(args[:args.index("from")]).title()
 			from_where = " ".join(args[args.index("from")+1:]).title()
@@ -275,10 +296,12 @@ class CommandParser:
 			else:
 				print(f"There is nothing around by name of {from_where}.")
 			if [i for i in from_where_item.inventory if re.findall(to_get, i) != []] != []:
-				to_get = [i for i in from_where_item.inventory if re.findall(to_get, i) != []][0]
-				to_get = Item.item_id[to_get]
-				from_where_item.remove_inventory(to_get.item_id)
-				print(f"You take out {to_get.get_article()}{to_get.name.lower()} from {from_where_item.get_article()}{from_where_item.name.lower()}.")
+				if self.player.check_energy():
+					self.player.energy -= 1
+					to_get = [i for i in from_where_item.inventory if re.findall(to_get, i) != []][0]
+					to_get = Item.item_id[to_get]
+					from_where_item.remove_inventory(to_get.item_id)
+					print(f"You take out {to_get.get_article()}{to_get.name.lower()} from {from_where_item.get_article()}{from_where_item.name.lower()}.")
 			else:
 				print(f"{from_where_item.name[0]+from_where_item.name[1:].lower()} does not hold {self.get_article(to_get)}{to_get.lower()}.")
 				return
@@ -288,10 +311,12 @@ class CommandParser:
 		else:
 			get_string = " ".join([arg.title() for arg in args])
 			if get_string in self.player.room.inventory and get_string not in Pokemon.pkmn_id.keys():
-				to_remove = self.player.room.remove_inventory(get_string)
-				item_article = self.get_article(to_remove)
-				self.player.add_inventory(to_remove)
-				print(f"You pick up {item_article}{to_remove}.")
+				if self.player.check_energy():
+					self.player.energy -= 1
+					to_remove = self.player.room.remove_inventory(get_string)
+					item_article = self.get_article(to_remove)
+					self.player.add_inventory(to_remove)
+					print(f"You pick up {item_article}{to_remove}.")
 
 	def handle_drop(self, args):
 		if len(args) >= 1:
@@ -341,7 +366,11 @@ class CommandParser:
 					to_put = [i for i in self.player.inventory if re.findall(to_put, i) != []][0]
 					to_put = Item.item_id[to_put]
 					if isinstance(where_put, Item) and where_put.container:
-						self.player.remove_inventory(to_put.item_id)
+						if self.player.check_energy():
+							self.player.energy -= 1
+							self.player.remove_inventory(to_put.item_id)
+						else:
+							return
 					else:
 						print(f"You can't put items into {where_put.name}!")
 						return
@@ -364,7 +393,11 @@ class CommandParser:
 				if [i for i in self.player.inventory if re.findall(to_put, i) != []] != []:
 					to_put = [i for i in self.player.inventory if re.findall(to_put, i) != []][0]
 					to_put = Item.item_id[to_put]
-					self.player.remove_inventory(to_put.item_id)
+					if self.player.check_energy():
+						self.player.energy -= 1
+						self.player.remove_inventory(to_put.item_id)
+					else:
+						return
 				else:
 					print(f"You are not holding {self.get_article(to_put)}{to_put.lower()}.")
 					return
@@ -377,7 +410,36 @@ class CommandParser:
 		pass
 
 	def handle_sleep(self, args):
-		pass
+		self.player.sleep()
+
+	def handle_use(self, args):
+		if not args:
+			print("Try as you might, you cannot use yourself.")
+		else:
+			to_use = " ".join(args[0:]).title()
+			if [thing for thing in self.player.room.inventory if re.findall(to_use, thing) != []] != []:
+				to_use = [thing for thing in self.player.room.inventory if re.findall(to_use, thing) != []][0]
+				if to_use in Item.item_id.keys():
+					to_use = Item.item_id[to_use]
+				else:
+					print("You can't use a Pokemon like that!")
+					return
+			elif [thing for thing in self.player.inventory if re.findall(to_use, thing) != []] != []:
+				to_use = [thing for thing in self.player.inventory if re.findall(to_use, thing) != []][0]
+				if to_use in Item.item_id.keys():
+					to_use = Item.item_id[to_use]
+				else:
+					print("You can't use a Pokemon like that!")
+					return
+			else:
+				print(f"You can't use {to_use.lower()} no matter how hard you try.")
+				return
+			if re.findall("[Tt]oilet", to_use.name):
+				to_flush = ", ".join(to_use.inventory).lower()
+				to_flush = re.sub("\\d", "", to_flush)
+				[to_use.remove_inventory(item) for item in to_use.inventory]
+				to_flush = to_flush if to_flush == "" else f" You watch in mild amusement as {to_flush} slowly spirals down the drain, vanishing before your very eyes into the piping through some miracle."
+				print(f"You pull down on the lever to flush {to_use.get_article()}{to_use.name.lower()}.{to_flush}")
 
 	def handle_help(self, args):
 		GREEN = "\033[92m"
