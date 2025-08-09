@@ -1,14 +1,16 @@
 from pokemon import Pokemon
+from pokemon_registry import register_pokemon
 import random
 
+@register_pokemon
 class Ivysaur(Pokemon):
 	species = "Ivysaur"
-	def __init__(self, name="", sex="r", nature="r", pattern="r", mother=None, father=None):
-		Pokemon.__init__(self, "Ivysaur", [60, 62, 63, 80, 80, 60], ["Grass", "Poison"], ["Grass", "Monster"], "Spots")
+	def __init__(self, name="", sex="r", nature="r", pattern="r", mother=None, father=None, **kwargs):
+		Pokemon.__init__(self, "Ivysaur", [60, 62, 63, 80, 80, 60], ["Grass", "Poison"], ["Grass", "Monster"], "Spots", **kwargs)
 		self.name = name if name != "" else self.species
 		if pattern == "r":
 			self.random_pattern(pattern_weights=[0.2,0.6,0.2], color_placement_weights=[0.1,0.8,0.1])
-		elif mother and father:
+		elif type(pattern) != type([]) and mother and father:
 			self.mother = mother
 			self.father = father
 			self.pattern_inheritance(self.mother, self.father)
