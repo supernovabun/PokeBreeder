@@ -17,11 +17,12 @@ As of writing this, you can run main.py without error (unless you're creative). 
   * [ ] Alola
   * [ ] Galar
   * [ ] Paldea
-* [x] Breeding
+* [x] Breeding - Basic
+* [ ] Breeding - Advanced
 * [ ] Evolution
 * [ ] Currency System
 * [ ] Quests System
-* [ ] Energy System
+* [x] Energy System
 
 ## To Work On
 
