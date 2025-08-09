@@ -1,10 +1,12 @@
 import random
 import re
 import copy
+from pokemon_registry import *
 
 class Pokemon:
 	pkmn_id = {}
-	def __init__(self, species, base_stats, types, egg_groups, descriptor):
+	pkmn_num = 1
+	def __init__(self, species, base_stats, types, egg_groups, descriptor, pkmn_id=None):
 		if type(species) != type(""):
 			raise TypeError("Invalid entry for species; you entered: %s" % (str(species)))
 		if type(base_stats) != type([]):
@@ -12,7 +14,7 @@ class Pokemon:
 		if type(types) != type([]):
 			raise TypeError("Invalid entry for types; you entered: %s" % (str(types)))
 		self.species = species
-		self.stats = {
+		self.base_stats = {
 		"Health": base_stats[0],
 		"Attack": base_stats[1],
 		"Defense": base_stats[2],
@@ -36,14 +38,21 @@ class Pokemon:
 		self.daily_food = []
 		self.room = "Aether"
 		self.trainer = ""
-		if list(Pokemon.pkmn_id.keys()) == []:
-			self.pkmn_id = f"{self.species}"+"{:06d}".format(1)
+		self.following = None
+		if pkmn_id:
+			self.pkmn_id = pkmn_id
 		else:
+			self.pkmn_id = f"{self.species}{Pokemon.pkmn_num:06d}"
+			Pokemon.pkmn_num += 1
+		"""if list(Pokemon.pkmn_id.keys()) == []:
+			self.pkmn_id = f"{self.species}"+"{:06d}".format(Pokemon.pkmn_num)
+		else:
+			print(Pokemon.pkmn_id.keys())
 			pkmn_id_keys = Pokemon.pkmn_id.keys()
 			pkmn_id_keys = [re.findall("\\d{6}", k)[0] for k in pkmn_id_keys]
 			pkmn_id_keys = sorted(pkmn_id_keys)
 			pkmn_last = pkmn_id_keys[-1]
-			self.pkmn_id = f"{self.species}" + "{:06d}".format(int(pkmn_last)+1)
+			self.pkmn_id = f"{self.species}" + "{:06d}".format(int(pkmn_last)+1)"""
 		Pokemon.pkmn_id[self.pkmn_id] = self
 
 	def set_trainer(self, trainer):
@@ -107,8 +116,10 @@ class Pokemon:
 		self.room = room
 		self.room.add_inventory(self.pkmn_id)
 
-	def set_IVs(self):
-		if self.mother != "Unknown" and self.father != "Unknown":
+	def set_IVs(self, IVs=None):
+		if IVs:
+			self.IVs = dict(zip(["Health", "Attack", "Defense", "Special Attack", "Special Defense", "Speed"], IVs))
+		elif self.mother != "Unknown" and self.father != "Unknown":
 			IVs_to_get = []
 			power_items = {
 			"Power Anklet": "Speed",
@@ -207,7 +218,7 @@ class Pokemon:
 		"Timid"
 		]
 		if method in natures:
-			self.nature = natures[method]
+			self.nature = method
 		elif self.mother != "Unknown" and self.father != "Unknown":
 			if self.mother.held_item == "Everstone" and self.father.held_item == "Everstone":
 				self.nature = random.choice([self.mother.nature, self.father.nature])
@@ -324,3 +335,64 @@ class Pokemon:
 
 	def get_description(self):
 		print(self.description)
+
+	def follow(self, following):
+		following.entourage.append(self)
+		self.following = following
+
+	def unfollow(self, following):
+		if self.following:
+			following.entourage.pop(following.entourage.index(self))
+			self.following = None
+
+	def to_dict(self):
+		if self.trainer:
+			if type(self.trainer) == type(" "):
+				pkmn_trainer = self.trainer
+			else:
+				pkmn_trainer = self.trainer.trainer_id
+		else:
+			pkmn_trainer = "None"
+		return({
+			"species": self.species,
+			"pkmn_id": self.pkmn_id,
+			"name": self.name,
+			"trainer": pkmn_trainer,
+			"nature": self.nature,
+			"base_stats": self.base_stats,
+			"type1": self.type1,
+			"type2": self.type2,
+			"mother": self.mother if type(self.mother) == type(" ") else self.mother.pkmn_id,
+			"father": self.father if type(self.father) == type(" ") else self.father.pkmn_id,
+			"egg_group1": self.egg_group1,
+			"egg_group2": self.egg_group2,
+			"held_item": self.held_item,
+			"sex": self.sex,
+			"affection": self.affection,
+			"daily_affection": self.daily_affection,
+			"daily_food": self.daily_food,
+			"loved": self.loved,
+			"room": self.room if type(self.room) == type(" ") else self.room.room_id,
+			"genes": [self.pattern, self.color, self.color_placement, self.color_dilution, self.color_extension, self.inheritance],
+			"ivs": list(self.IVs.values())
+		})
+
+	@staticmethod
+	def from_dict(data):
+		species = data["species"]
+		cls = pokemon_registry.get(species)
+		if cls:
+			new_pkmn = cls(data["name"], data["sex"], data["nature"], data["genes"], mother=data["mother"], father=data["father"], pkmn_id=data["pkmn_id"])
+			new_pkmn.set_IVs(data["ivs"])
+			new_pkmn.trainer = data["trainer"]
+			new_pkmn.affection = data["affection"]
+			new_pkmn.daily_affection = data["daily_affection"]
+			new_pkmn.daily_food = data["daily_food"]
+			new_pkmn.held_item = data["held_item"]
+			new_pkmn.mother_id = data["mother"]
+			new_pkmn.father_id = data["father"]
+			return(new_pkmn)
+		else:
+			print("How did you even... manage to call a non-existing species of Pokemon...")
+			# I'll just... return a random Pokemon here...
+			return(Pokemon(data["name"], data["sex"], data["nature"], data["genes"], mother=data["mother"], father=data["father"], pkmn_id=data["pkmn_id"]))
