@@ -4,7 +4,7 @@ class Item:
 	item_id = {}
 	def __init__(self, name, item_type, room, value, gettable=True, container=False):
 		self.name = name.title()
-		self.item_type = item_type.title() if item_type.title() not in ["Food", "Held Item", "Medicine", "Painting", "Statue", "Drawing", "Misc."] else "Misc."
+		self.item_type = item_type.title() if item_type.title() not in ["Food", "Furniture", "Held Item", "Medicine", "Painting", "Statue", "Drawing", "Misc."] else "Misc."
 		self.room = room
 		self.base_value = int(value)
 		self.gettable = gettable
@@ -19,7 +19,8 @@ class Item:
 			item_last = item_id_keys[-1]
 			self.item_id = f"{name.title()}"+"{:04d}".format(int(item_last)-1)
 		Item.item_id[self.item_id] = self
-		self.room.add_inventory(self.item_id)
+		if self.room:
+			self.room.add_inventory(self.item_id)
 
 	def set_desc(self, desc):
 		self.description = desc
