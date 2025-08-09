@@ -3,19 +3,18 @@ from item import Item
 
 class Room:
 	rooms = {}
-	def __init__(self, brief_desc):
+	room_num = 1
+	def __init__(self, brief_desc, id_num=None):
 		self.brief = brief_desc + "."
 		self.inventory = []
 		self.exits = {}
-		room_id = brief_desc.replace(" ", "_")
-		if list(Room.rooms.keys()) == []:
-			self.room_id = f"{room_id}"+"{:03d}".format(1)
+		self.verbose = ""
+		room_id = brief_desc
+		if id_num:
+			self.room_id = id_num
 		else:
-			rooms_keys = Room.rooms.keys()
-			rooms_keys = [re.findall("\\d{3}", k)[0] for k in rooms_keys]
-			rooms_keys = sorted(rooms_keys)
-			room_last = rooms_keys[-1]
-			self.room_id = f"{room_id}" + "{:03d}".format(int(room_last)+1)
+			self.room_id = f"{room_id}{Room.room_num:03d}"
+			Room.room_num += 1
 		Room.rooms[self.room_id] = self
 
 	def set_verbose(self, verbose_desc):
@@ -56,3 +55,21 @@ class Room:
 		print(f"{DARK_GREEN}{self.brief}{RESET}")
 		print(f"{MED_GRAY}{self.verbose}{RESET}")
 		print(f"{LIGHT_GREEN}Exits{RESET}: {self.get_exits()}.")
+
+	def to_dict(self):
+		return({
+			"brief": self.brief[:-1],
+			"room_id": self.room_id,
+			"inventory": [i if type(i) == type(" ") else i.item_id for i in self.inventory],
+			"exits": [(k, v.room_id) for k, v in self.exits.items()],
+			"desc": self.verbose
+		})
+
+	@staticmethod
+	def from_dict(data):
+		loaded_room = Room(data["brief"], id_num=data["room_id"])
+		for each_room in data["exits"]:
+			loaded_room.add_exit(each_room[0], each_room[1])
+		loaded_room.set_verbose(data["desc"])
+		loaded_room.add_inventory(data["inventory"])
+		return(loaded_room)
