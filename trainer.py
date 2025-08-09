@@ -3,7 +3,9 @@ from indiv import *
 
 class Trainer:
 	trainer_id = {}
-	def __init__(self, name, room):
+	trainer_num = 1
+	def __init__(self, name, room, trainer_id=None):
+		self.name = name
 		self.currency = 2000
 		self.pasture_size = 1
 		self.pokemon = {}
@@ -12,14 +14,11 @@ class Trainer:
 		self.entourage = []
 		self.energy = 120
 		self.room = room
-		if len(Trainer.trainer_id.keys()) == 0:
-			self.trainer_id = f"Trainer{name.title()}"+"{:02d}".format(1)
+		if trainer_id:
+			self.trainer_id = trainer_id
 		else:
-			trainer_id_keys = Trainer.trainer_id.keys()
-			trainer_id_keys = [re.findall("\\d{2}", k)[0] for k in trainer_id_keys]
-			trainer_id_keys = sorted(trainer_id_keys)
-			trainer_last = trainer_id_keys[-1]
-			self.trainer_id = f"Trainer{name.title()}"+"{:02d}".format(int(trainer_last)-1)
+			self.trainer_id = f"Trainer{name.title()}{Trainer.trainer_num:02d}"
+			Trainer.trainer_num += 1
 		Trainer.trainer_id[self.trainer_id] = self
 
 	def add_pokemon(self, new_pokemon):
@@ -108,3 +107,34 @@ class Trainer:
 			print("Everything in your body begs you to sleep just a bit longer. Alas, you are awake.")
 		else:
 			print("Your body screams for sleep that you have not permitted it. How are you supposed to take care of Pokemon if you can't take care of yourself?")
+
+	def to_dict(self):
+		return({
+			"trainer_id": self.trainer_id,
+			"name": self.name,
+			"currency": self.currency,
+			"pasture_size": self.pasture_size,
+			"pokemon": list(self.pokemon.keys()),
+			"pokedex": self.pokedex,
+			"inventory": self.inventory,
+			"entourage": [ent.to_dict() for ent in self.entourage],
+			"energy": self.energy,
+			"room": self.room.room_id
+		})
+
+	@staticmethod
+	def from_dict(data):
+		from room import Room
+		from pokemon import Pokemon
+
+		trainer = Trainer(data["name"], data["room"], trainer_id=data["trainer_id"])
+		trainer.name = data["name"]
+		trainer.currency = data["currency"]
+		trainer.pokemon = data["pokemon"]
+		trainer.pokedex = data["pokedex"]
+		trainer.inventory = data["inventory"]
+		trainer.entourage = [Pokemon.from_dict(p) for p in data["entourage"]]
+		trainer.energy = data["energy"]
+		trainer.room_string = data["room"]
+
+		return(trainer)
