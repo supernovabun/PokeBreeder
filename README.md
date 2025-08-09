@@ -23,6 +23,7 @@ As of writing this, you can run main.py without error (unless you're creative). 
 * [ ] Currency System
 * [ ] Quests System
 * [x] Energy System
+* [x] Save System
 
 ## To Work On
 
