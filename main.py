@@ -22,11 +22,12 @@ if __name__ == "__main__":
 	myBulba.get_IVs()
 	#user = Trainer()
 	myBulba.trainer = user
+	user.add_pokemon(myBulba)
 	myBulba.set_room(myBulba.trainer.room)
 
 	parser = CommandParser(user)
 	#print(myBulba.room.room_id)
 	#print(type(myBulba))
 	while True:
-		user_input = input("> ")
+		user_input = input(f"{user.display_energy()} > ")
 		parser.parse(user_input)
