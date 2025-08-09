@@ -1,12 +1,17 @@
 import re
 import sys
 from pokemon import Pokemon
+from trainer import Trainer
+from room import Room
 from item import Item
+from save_manager import SaveManager ## TEST
+from game_state import GameState ## TEST
 
 class CommandParser:
 
 	def __init__(self, player):
 		self.player = player
+		self.saver = SaveManager()
 		self.commands = {
 			"look": self.handle_look,
 			"l": self.handle_look,
@@ -56,7 +61,11 @@ class CommandParser:
 			"score": self.handle_status,
 			"help": self.handle_help,
 			"sleep": self.handle_sleep,
-			"use": self.handle_use
+			"use": self.handle_use,
+			"lose": self.handle_lose,
+			"ent": self.handle_entourage,
+			"entourage": self.handle_entourage,
+			"save": self.handle_save
 		}
 
 	def parse(self, text):
@@ -153,6 +162,10 @@ class CommandParser:
 				for each_item in self.player.inventory:
 					each_item = Item.item_id[each_item]
 					each_item.room = self.player.room
+				for each_pkmn in self.player.entourage:
+					each_pkmn.room.remove_inventory(each_pkmn.pkmn_id)
+					each_pkmn.room = self.player.room
+					self.player.room.add_inventory(each_pkmn.pkmn_id)
 				self.player.room.display()
 			else:
 				return
@@ -233,7 +246,40 @@ class CommandParser:
 			spoken = " ".join([args[0][0].upper()+args[0][1:]] + args[1:])
 			if spoken[-1] not in ["?", ".", "!"]:
 				spoken += "."
-			print(f'{CYAN}You say, "{spoken}{RESET}"')
+			print(f'{CYAN}You say, "{spoken}"{RESET}')
+			if "follow" in args or "Follow" in args:
+				follow = "follow" if "follow" in args else "Follow"
+				args = args[args.index(follow)+1:]
+				if "me" in args or "me," in args:
+					me = "me" if "me" in args else "me,"
+					pkmn_to_follow = re.sub("\\.\\?\\!", "", " ".join(args[args.index(me)+1:]).title())
+					pkmn_present = [Pokemon.pkmn_id[thing] for thing in self.player.room.inventory if re.findall("\\d{6}$", thing) != []]
+					pkmn_present_species = {}
+					for pkmn in pkmn_present:
+						if pkmn.species in pkmn_present_species.keys():
+							pkmn_present_species[pkmn.species] += 1
+						else:
+							pkmn_present_species[pkmn.species] = 1
+					pkmn_present_species = [f"{v} {k}" for k, v in pkmn_present_species.items()]
+					if pkmn_to_follow:
+						pkmn_to_follow = [pkmn for pkmn in pkmn_present if re.findall(pkmn_to_follow, pkmn.name) and pkmn.trainer == self.player]
+						if pkmn_to_follow:
+							if pkmn_to_follow[0] not in self.player.entourage:
+								pkmn_to_follow[0].follow(self.player)
+							print(f"{pkmn_to_follow[0].name} falls in line behind you.")
+						else:
+							print(f"The {", ".join(pkmn_present_species)} here look at you with confused expressions.")
+					else:
+						pkmn_to_follow = [pkmn for pkmn in pkmn_present if pkmn.trainer == self.player]
+						if pkmn_to_follow:
+							for pkmn in pkmn_to_follow:
+								if pkmn not in self.player.entourage:
+									pkmn.follow(self.player)
+							print("Your Pokemon follow closely behind you.")
+						elif pkmn_present:
+							print(f"The {", ".join(pkmn_present_species)} look up curiously.")
+						else:
+							pass
 			return(spoken)
 
 	def handle_yes(self, args):
@@ -441,6 +487,27 @@ class CommandParser:
 				to_flush = to_flush if to_flush == "" else f" You watch in mild amusement as {to_flush} slowly spirals down the drain, vanishing before your very eyes into the piping through some miracle."
 				print(f"You pull down on the lever to flush {to_use.get_article()}{to_use.name.lower()}.{to_flush}")
 
+	def handle_lose(self, args):
+		if not args:
+			print("What are you trying to have stop following you?")
+		else:
+			to_lose = " ".join(args).title()
+			pkmn_entourage = [i for i in self.player.entourage]
+			pkmn = [p for p in pkmn_entourage if re.findall(to_lose, p.pkmn_id) != []]
+			pkmn = pkmn if pkmn else [p for p in pkmn_entourage if re.findall(to_lose, p.name) != []]
+			pkmn = pkmn if pkmn else None
+			if pkmn:
+				pkmn[0].unfollow(self.player)
+				print(f"{pkmn[0].name} stops following you.")
+			elif args[0] == "all":
+				[p.unfollow(self.player) for p in pkmn_entourage]
+				print("Everyone decides to stop following you.")
+			else:
+				print(f"It doesn't appear {to_lose} is following you.")
+
+	def handle_entourage(self, args):
+		print(f"The following Pokemon are following you:\n  {"\n  ".join([pkmn.pkmn_id for pkmn in self.player.entourage])}")
+
 	def handle_help(self, args):
 		GREEN = "\033[92m"
 		RESET = "\033[0m"
@@ -484,7 +551,18 @@ class CommandParser:
 			else:
 				print(f"{GREEN}I cannot help you with the sort of help you need...{RESET}")
 
+	def handle_save(self, args):
+		if not args:
+			trainer_ids = list(Trainer.trainer_id.values())[1:]
+			pkmn_ids = list(Pokemon.pkmn_id.values())
+			room_ids = list(Room.rooms.values())
+			item_ids = list(Item.item_id.values())
+			save_state = GameState(self.player, trainer_ids, pkmn_ids, room_ids, item_ids)
+			self.saver.save_game(save_state)
+		pass
+
 	def handle_quit(self, args):
+		self.handle_save(args)
 		print("You decide it's time for a break and to tend to yourself. Your Pokemon will eagerly await your return.")
 		sys.exit()
 
