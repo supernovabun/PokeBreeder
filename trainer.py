@@ -1,4 +1,5 @@
 import random
+from room import Room ## Test
 from indiv import *
 
 class Trainer:
@@ -14,12 +15,24 @@ class Trainer:
 		self.entourage = []
 		self.energy = 120
 		self.room = room
+		self.description = ""
 		if trainer_id:
 			self.trainer_id = trainer_id
 		else:
 			self.trainer_id = f"Trainer{name.title()}{Trainer.trainer_num:02d}"
 			Trainer.trainer_num += 1
 		Trainer.trainer_id[self.trainer_id] = self
+
+	def set_desc(self, desc):
+		self.description = desc
+
+	def set_room(self, room=None):
+		if not room or room == "":
+			room = self.room
+		if self.trainer_id[-2:] != "01":
+			if isinstance(room, str):
+				self.room = Room.rooms[room]
+			self.room.add_inventory(self.trainer_id) if self.trainer_id not in self.room.inventory else None
 
 	def add_pokemon(self, new_pokemon):
 		self.pokemon[new_pokemon.pkmn_id] = new_pokemon
@@ -88,7 +101,7 @@ class Trainer:
 		if self.room.brief == "Master bedroom in a quaint house.":
 			regain = 100
 			print("You crawl into bed and under your covers, pulling your bed sheet up to your chin. You close your eyes and slip off to sweet slumber.")
-		elif self.room.brief == "An oversized living room.":
+		elif self.room.brief == "Spacious family den.":
 			regain = 75
 			print("You throw yourself, sprawled out like a Staryu, onto your sectional couch. You stick the landing and wiggle this way and that until you are comfortable enough to find sleep.")
 		else:
@@ -119,6 +132,7 @@ class Trainer:
 			"inventory": self.inventory,
 			"entourage": [ent.to_dict() for ent in self.entourage],
 			"energy": self.energy,
+			"description": self.description,
 			"room": self.room.room_id
 		})
 
@@ -135,6 +149,7 @@ class Trainer:
 		trainer.inventory = data["inventory"]
 		trainer.entourage = [Pokemon.from_dict(p) for p in data["entourage"]]
 		trainer.energy = data["energy"]
+		trainer.description = data["description"]
 		trainer.room_string = data["room"]
 
 		return(trainer)
