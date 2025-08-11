@@ -116,12 +116,28 @@ class CommandParser:
 				elif desc_thing == "" and args[0] == re.findall("\\d+$", thing)[0]:
 					if thing in Item.item_id.keys():
 						desc_thing = Item.item_id[thing].get_desc()
-					else:
+					elif thing in Pokemon.pkmn_id.keys():
 						desc_thing = Pokemon.pkmn_id[thing].description
+					else:
+						desc_thing = Trainer.trainer_id[thing].description
 				elif desc_thing == "" and args[0].lower() == re.findall("^[a-zA-Z \\-\\']+", thing)[0].lower():
-					desc_thing = Pokemon.pkmn_id[thing].description if thing in Pokemon.pkmn_id.keys() else Item.item_id[thing].get_desc()
+					if thing in Pokemon.pkmn_id.keys():
+						desc_thing = Pokemon.pkmn_id[thing].description
+					elif thing in Item.item_id.keys():
+						desc_thing = Item.item_id[thing].get_desc()
+					elif thing in Trainer.trainer_id.keys():
+						desc_thing = Trainer.trainer_id[thing].description
+					else:
+						desc_thing = ""
 				elif desc_thing == "" and re.findall(" ".join(args).title(), thing) != []:
-					desc_thing = Pokemon.pkmn_id[thing].description if thing in Pokemon.pkmn_id.keys() else Item.item_id[thing].get_desc()
+					if thing in Pokemon.pkmn_id.keys():
+						desc_thing = Pokemon.pkmn_id[thing].description
+					elif thing in Item.item_id.keys():
+						desc_thing = Item.item_id[thing].get_desc()
+					elif thing in Trainer.trainer_id.keys():
+						desc_thing = Trainer.trainer_id[thing].description
+					else:
+						desc_thing = ""
 			if desc_thing == "":
 				for thing in self.player.inventory:
 					if " ".join(args).title() == thing:
@@ -321,8 +337,11 @@ class CommandParser:
 				elif len(to_remove) > 1:
 					print(f"Did you mean to get one of these? {", ".join(to_remove)}")
 				else:
-					if not Item.item_id[to_remove[0]].gettable:
+					if to_remove[0] in Item.item_id.keys() and not Item.item_id[to_remove[0]].gettable:
 						print(f"Try as you might, you cannot pick up {Item.item_id[to_remove[0]].get_article()}{Item.item_id[to_remove[0]].name.lower()}.")
+						return
+					elif to_remove[0] not in Item.item_id.keys():
+						print(f"You can't pick up {to_remove[0]}")
 						return
 					if self.player.check_energy():
 						self.player.energy -= 1
@@ -338,7 +357,10 @@ class CommandParser:
 				from_where_item = Item.item_id[from_where]
 			elif [w for w in self.player.room.inventory if re.findall(from_where, w) != []] != []:
 				from_where = [w for w in self.player.room.inventory if re.findall(from_where, w) != []][0]
-				from_where_item = Item.item_id[from_where]
+				if re.findall("[a-zA-Z \\'\\,\\-]+\\d\\d$") != []:
+					from_where_item = Item.item_id[from_where]
+				else:
+					print("You cannot take things from people, especially not without their permission!")
 			else:
 				print(f"There is nothing around by name of {from_where}.")
 			if [i for i in from_where_item.inventory if re.findall(to_get, i) != []] != []:
