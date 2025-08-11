@@ -1,11 +1,10 @@
-#from indiv import *
 from trainer import Trainer
-from pokemon import Pokemon ## TEST
-from item import Item ## TEST
-from room import Room ## TEST
+from pokemon import Pokemon
+from item import Item
+from room import Room
 import sys
-from save_manager import SaveManager ### this is a test
-from game_state import GameState ### this is a test
+from save_manager import SaveManager
+from game_state import GameState
 from commands import CommandParser
 from worldgen import generate_world
 
@@ -35,30 +34,7 @@ if __name__ == "__main__":
 	game_state = main()
 	user = game_state.trainer
 
-	"""
-	mom = Ivysaur("Mommy", sex="F")
-	dad = Venusaur("Daddy", sex="M")
-	# mom.held_item = "Power Weight"
-	# dad.held_item = "Destiny Knot"
-	myBulba = mom.breed(dad)
-	try:
-		myBulba.display_genetics()
-	except:
-		print("No baby made!")
-	# print("Mom: %s" % (str(mom.IVs)))
-	# print("Dad: %s" % (str(dad.IVs)))
-	# print("Baby: %s" % (str(myBulba.IVs)))
-	myBulba.get_description()
-	myBulba.get_IVs()
-	#user = Trainer()
-	myBulba.trainer = user
-	user.add_pokemon(myBulba)
-	myBulba.set_room(myBulba.trainer.room)
-	"""
-
 	parser = CommandParser(user)
-	#print(myBulba.room.room_id)
-	#print(type(myBulba))
 
 	parser.handle_look([])
 	while True:
