@@ -3,7 +3,7 @@ This ~~ambitious~~ insane project is for creating a single-player text game wher
 
 ## Currently...
 
-As of writing this, you can run main.py without error (unless you're creative). You can move between the two rooms I've created, you have a Bulbasaur that's just sitting in your bedroom, and there's a painting in the hallway. You can also look at Bulbasaur, the rooms, and the painting. You can grab the painting too, but why would you ever do that? You can also speak, but nothing really cool happens there.
+As of writing this, you can run main.py without error (unless you're creative). You can move between a few rooms I've created, you have a Bulbasaur that's just sitting in your bedroom, and there's a painting in the hallway and a secret in another room. You can also look at Bulbasaur, your debug-mom, the rooms, and any objects I've put in. You can grab the painting too, but why would you ever do that? You can also speak, but nothing really cool happens there... unless...
 
 ## Features
 * [ ] Tutorials
