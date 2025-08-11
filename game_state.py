@@ -2,6 +2,7 @@ from trainer import Trainer
 from pokemon import Pokemon
 from room import Room
 from item import Item
+from worldgen import generate_stages
 
 class GameState:
     def __init__(self, trainer, created_trainers, created_pokemon, created_rooms, created_items):
@@ -33,7 +34,9 @@ class GameState:
         Trainer.trainer_id = {}
         Trainer.trainer_id[trainer.trainer_id] = trainer
         for index in range(len(created_trainers)):
-            Trainer.trainer_id[created_trainers[index].trainer_id] = created_trainers[index]
+            t_id = created_trainers[index].trainer_id
+            Trainer.trainer_id[t_id] = created_trainers[index]
+            Trainer.trainer_id[t_id].room = Room.rooms[created_trainers[index].room]
 
         for index in range(len(created_items)):
             created_items[index].room = created_items[index].room if created_items[index].room else None
@@ -43,23 +46,28 @@ class GameState:
             for k, v in created_rooms[index].exits.items():
                 created_rooms[index].exits[k] = Room.rooms[v]
 
+        """### Removing this to test it's working
         Room.rooms = {}
         for each_room in created_rooms:
-            Room.rooms[each_room.room_id] = each_room
+            Room.rooms[each_room.room_id] = each_room"""
 
-        #Pokemon.pkmn_id = {}
-        #print([pkmn.pkmn_id for pkmn in created_pokemon])
         for pkmn in created_pokemon:
             pkmn.trainer = Trainer.trainer_id[pkmn.trainer] if pkmn.trainer != "None" else pkmn.trainer
-            #Pokemon.pkmn_id[pkmn.pkmn_id] = pkmn
 
         trainer_pkmn = {}
         for pkmn in trainer.pokemon:
             trainer_pkmn[pkmn] = Pokemon.pkmn_id[pkmn]
+            trainer_pkmn[pkmn].set_room(trainer_pkmn[pkmn].room)
         trainer.pokemon = trainer_pkmn
 
         Item.item_id = {}
         for each_item in created_items:
             Item.item_id[each_item.item_id] = each_item
+
+        for each_trainer in Trainer.trainer_id.values():
+            each_trainer.pokemon = dict(zip(each_trainer.pokemon, [Pokemon.pkmn_id[each_pkmn] for each_pkmn in each_trainer.pokemon]))
+            each_trainer.set_room()
+
+        generate_stages()
 
         return(GameState(trainer, created_trainers, created_pokemon, created_rooms, created_items))
