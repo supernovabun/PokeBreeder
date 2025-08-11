@@ -27,6 +27,10 @@ As of writing this, you can run main.py without error (unless you're creative). 
 
 ## To Work On
 
+### Egg
+
+Gotta make eggs. Not sure how best to do this. Maybe as a subclass of Pokemon... probably as a subclass of Pokemon...
+
 ### Evolution
 
 This needs to create a new instance of next stage of Pokemon, set the IVs the same, the nature the same, the genetics the same, and replace the new Pokemon in its place in the Pokemon list with the same id number but new Pokemon name (Bulbasaur000001 becomes Ivysaur000001).
