@@ -1,6 +1,7 @@
 import random
 import re
 import copy
+from room import Room
 from pokemon_registry import *
 
 class Pokemon:
@@ -36,7 +37,7 @@ class Pokemon:
 		self.loved = 0
 		self.fullness = 0
 		self.daily_food = []
-		self.room = "Aether"
+		self.room = "Aether000"
 		self.trainer = ""
 		self.following = None
 		if pkmn_id:
@@ -44,19 +45,18 @@ class Pokemon:
 		else:
 			self.pkmn_id = f"{self.species}{Pokemon.pkmn_num:06d}"
 			Pokemon.pkmn_num += 1
-		"""if list(Pokemon.pkmn_id.keys()) == []:
-			self.pkmn_id = f"{self.species}"+"{:06d}".format(Pokemon.pkmn_num)
-		else:
-			print(Pokemon.pkmn_id.keys())
-			pkmn_id_keys = Pokemon.pkmn_id.keys()
-			pkmn_id_keys = [re.findall("\\d{6}", k)[0] for k in pkmn_id_keys]
-			pkmn_id_keys = sorted(pkmn_id_keys)
-			pkmn_last = pkmn_id_keys[-1]
-			self.pkmn_id = f"{self.species}" + "{:06d}".format(int(pkmn_last)+1)"""
 		Pokemon.pkmn_id[self.pkmn_id] = self
 
 	def set_trainer(self, trainer):
 		self.trainer = trainer
+
+	def set_room(self, room=None):
+		if not room or room == "":
+			room = self.room
+		if isinstance(room, str):
+			room = Room.rooms[room]
+		self.room = room
+		self.room.add_inventory(self.pkmn_id) if self.pkmn_id not in self.room.inventory else None
 
 	def random_pattern(self, pattern_weights=[0.333, 0.333, 0.333], color_weights=[0.5, 0.5], color_placement_weights=[0.333,0.333,0.333], color_dilution_weights=[0.5, 0.5], color_extension_weights=[0.5, 0.5]):
 		self.pattern = random.choices(["A", "/", "a"], weights=pattern_weights, k=1)[0] + random.choices(["A", "/", "a"], weights=pattern_weights, k=1)[0]
@@ -111,10 +111,6 @@ class Pokemon:
 	
 	def set_name(self, new_name):
 		self.name = new_name
-
-	def set_room(self, room):
-		self.room = room
-		self.room.add_inventory(self.pkmn_id)
 
 	def set_IVs(self, IVs=None):
 		if IVs:
