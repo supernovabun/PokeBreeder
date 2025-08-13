@@ -2,12 +2,14 @@ import random
 import re
 import copy
 from room import Room
+from egg import Egg
 from pokemon_registry import *
 
 class Pokemon:
+	stages = []
 	pkmn_id = {}
 	pkmn_num = 1
-	def __init__(self, species, base_stats, types, egg_groups, descriptor, pkmn_id=None):
+	def __init__(self, species, base_stats, types, egg_groups, descriptor, pkmn_id=None, hatched_from_egg=False, room="Aether000"):
 		if type(species) != type(""):
 			raise TypeError("Invalid entry for species; you entered: %s" % (str(species)))
 		if type(base_stats) != type([]):
@@ -25,19 +27,19 @@ class Pokemon:
 		}
 		self.type1 = types[0]
 		self.type2 = types[1]
-		self.mother = "Unknown"
-		self.father = "Unknown"
+		self.mother = None # Had been "Unknown"
+		self.father = None # Had been "Unknown"
 		self.egg_group1 = egg_groups[0]
 		self.egg_group2 = egg_groups[1]
 		self.descriptor = descriptor
 		self.held_item = ""
 		self.sex = ""
+		self.room = room if isinstance(room, Room) else Room.rooms[room]
 		self.affection = 0
 		self.daily_affection = []
-		self.loved = 0
+		self.loved = 0 if not hatched_from_egg else 25
 		self.fullness = 0
 		self.daily_food = []
-		self.room = "Aether000"
 		self.trainer = ""
 		self.following = None
 		if pkmn_id:
@@ -50,13 +52,13 @@ class Pokemon:
 	def set_trainer(self, trainer):
 		self.trainer = trainer
 
-	def set_room(self, room=None):
-		if not room or room == "":
+	def set_room(self, room="Aether000"):
+		if not room:
 			room = self.room
-		if isinstance(room, str):
-			room = Room.rooms[room]
-		self.room = room
-		self.room.add_inventory(self.pkmn_id) if self.pkmn_id not in self.room.inventory else None
+		self.room = room if isinstance(room, Room) else Room.rooms[room]
+		if isinstance(room, Room):
+			self.room.add_inventory(self.pkmn_id) if self.pkmn_id not in self.room.inventory else None
+		#self.room.add_inventory(self.pkmn_id) if self.pkmn_id not in self.room.inventory else None
 
 	def random_pattern(self, pattern_weights=[0.333, 0.333, 0.333], color_weights=[0.5, 0.5], color_placement_weights=[0.333,0.333,0.333], color_dilution_weights=[0.5, 0.5], color_extension_weights=[0.5, 0.5]):
 		self.pattern = random.choices(["A", "/", "a"], weights=pattern_weights, k=1)[0] + random.choices(["A", "/", "a"], weights=pattern_weights, k=1)[0]
@@ -67,6 +69,8 @@ class Pokemon:
 		self.inheritance = "None"
 
 	def pattern_inheritance(self, mother, father):
+		mother = Pokemon.pkmn_id[mother] if isinstance(mother, str) else mother
+		father = Pokemon.pkmn_id[father] if isinstance(father, str) else father
 		if mother.species == "Ditto" or father.species == "Ditto":
 			self.pattern = mother.pattern if mother.species != "Ditto" else father.pattern
 			self.color = mother.color if mother.species != "Ditto" else father.color
@@ -94,28 +98,22 @@ class Pokemon:
 		if self.sex == other_parent.sex:
 			print("Two Pokemon must be opposite sexes to breed an egg!")
 			return
-		elif self.sex == "M" and other_parent.sex == "F":
-			temp_mother = other_parent
-			temp_father = self
-			# baby = type(self)(self.species, sex="r", pattern="parents", mother=temp_mother, father=temp_father) ### This works, but gotta fix this
-			baby = type(self).stages[0](type(self).stages[0].species, sex="r", pattern="parents", mother=temp_mother, father=temp_father)
-			baby.loved = 25
-			return(baby)
-		else:
-			temp_mother = self
-			temp_father = other_parent
-			# baby = type(self)(self.species, sex="r", pattern="parents", mother=temp_mother, father=temp_father) ### This works, but gotta fix this
-			baby = type(self).stages[0](type(self).stages[0].species, sex="r", pattern="parents", mother=temp_mother, father=temp_father)
-			baby.loved = 25
-			return(baby)
+
+		temp_mother = self if self.sex == "F" else other_parent
+		temp_father = other_parent if self.sex == "F" else self
+		baby_species = type(temp_mother).stages[0].species
+
+		return(Egg(species=baby_species, room=temp_mother.room, mother=temp_mother, father=temp_father, days_remaining=100))
 	
 	def set_name(self, new_name):
 		self.name = new_name
 
 	def set_IVs(self, IVs=None):
+		mother = Pokemon.pkmn_id[self.mother] if isinstance(self.mother, str) else self.mother
+		father = Pokemon.pkmn_id[self.father] if isinstance(self.father, str) else self.father
 		if IVs:
 			self.IVs = dict(zip(["Health", "Attack", "Defense", "Special Attack", "Special Defense", "Speed"], IVs))
-		elif self.mother != "Unknown" and self.father != "Unknown":
+		elif mother and father:
 			IVs_to_get = []
 			power_items = {
 			"Power Anklet": "Speed",
@@ -125,26 +123,26 @@ class Pokemon:
 			"Power Lens": "Special Attack",
 			"Power Weight": "Health",
 			}
-			if self.mother.held_item == "Destiny Knot":
-				mother_to_get = random.sample(list(self.mother.IVs.keys()), 5)
-				mother_to_get = [(k, self.mother.IVs[k]) for k in mother_to_get]
+			if mother.held_item == "Destiny Knot":
+				mother_to_get = random.sample(list(mother.IVs.keys()), 5)
+				mother_to_get = [(k, mother.IVs[k]) for k in mother_to_get]
 				IVs_to_get += mother_to_get
-			elif self.mother.held_item in ["Power Anklet", "Power Band", "Power Belt", "Power Bracer", "Power Lens", "Power Weight"]:
-				IVs_to_get.append((power_items[self.mother.held_item], self.mother.IVs[power_items[self.mother.held_item]]))
-			if self.father.held_item == "Destiny Knot":
+			elif mother.held_item in ["Power Anklet", "Power Band", "Power Belt", "Power Bracer", "Power Lens", "Power Weight"]:
+				IVs_to_get.append((power_items[mother.held_item], mother.IVs[power_items[mother.held_item]]))
+			if father.held_item == "Destiny Knot":
 				if len(IVs_to_get) == 1:
-					temp_father_IVs = copy.deepcopy(self.father.IVs)
+					temp_father_IVs = copy.deepcopy(father.IVs)
 					temp_father_IVs.pop(IVs_to_get[0][0])
 					IVs_to_get += list(temp_father_IVs.items())
 				else:
-					father_to_get = random.sample(list(self.father.IVs.keys()), 5)
-					father_to_get = [(k, self.father.IVs[k]) for k in father_to_get]
+					father_to_get = random.sample(list(father.IVs.keys()), 5)
+					father_to_get = [(k, father.IVs[k]) for k in father_to_get]
 					IVs_to_get += father_to_get
-			elif self.father.held_item in list(power_items.keys()):
-				father_to_get = (power_items[self.father.held_item], self.father.IVs[power_items[self.father.held_item]])
+			elif father.held_item in list(power_items.keys()):
+				father_to_get = (power_items[father.held_item], father.IVs[power_items[father.held_item]])
 				if len(IVs_to_get) == 5 and father_to_get[0] in [k for k,v in IVs_to_get]:
 					IVs_to_get = [father_to_get]
-					temp_mother_IVs = copy.deepcopy(self.mother.IVs)
+					temp_mother_IVs = copy.deepcopy(mother.IVs)
 					temp_mother_IVs.pop(father_to_get[0])
 					temp_mother_IVs = list(temp_mother_IVs.items())
 					IVs_to_get += temp_mother_IVs
@@ -155,7 +153,7 @@ class Pokemon:
 				IVs_to_get = dict(IVs_to_get)
 			elif len(IVs_to_get) == 0:
 				IVs_to_get = random.sample(["Health", "Attack", "Defense", "Special Attack", "Special Defense", "Speed"], 2)
-				IVs_to_get = [(IVs_to_get[0], self.mother.IVs[IVs_to_get[0]]), (IVs_to_get[1], self.father.IVs[IVs_to_get[1]])]
+				IVs_to_get = [(IVs_to_get[0], mother.IVs[IVs_to_get[0]]), (IVs_to_get[1], father.IVs[IVs_to_get[1]])]
 				IVs_to_get = dict(IVs_to_get)
 			IVs_to_get = dict(IVs_to_get)
 			self.IVs = {
@@ -186,6 +184,8 @@ class Pokemon:
 			self.pronouns = ["It", "Its", "Its", "It"]
 
 	def set_nature(self, method="r"):
+		mother = Pokemon.pkmn_id[self.mother] if isinstance(self.mother, str) else self.mother
+		father = Pokemon.pkmn_id[self.father] if isinstance(self.father, str) else self.father
 		natures = [
 		"Adamant",
 		"Bashful",
@@ -215,13 +215,13 @@ class Pokemon:
 		]
 		if method in natures:
 			self.nature = method
-		elif self.mother != "Unknown" and self.father != "Unknown":
-			if self.mother.held_item == "Everstone" and self.father.held_item == "Everstone":
-				self.nature = random.choice([self.mother.nature, self.father.nature])
-			elif self.mother.held_item == "Everstone":
-				self.nature = self.mother.nature
-			elif self.father.held_item == "Everstone":
-				self.nature = self.father.nature
+		elif mother and father:
+			if mother.held_item == "Everstone" and father.held_item == "Everstone":
+				self.nature = random.choice([mother.nature, father.nature])
+			elif mother.held_item == "Everstone":
+				self.nature = mother.nature
+			elif father.held_item == "Everstone":
+				self.nature = father.nature
 			else:
 				self.nature = random.choice(natures)
 		else:
@@ -358,8 +358,8 @@ class Pokemon:
 			"base_stats": self.base_stats,
 			"type1": self.type1,
 			"type2": self.type2,
-			"mother": self.mother if type(self.mother) == type(" ") else self.mother.pkmn_id,
-			"father": self.father if type(self.father) == type(" ") else self.father.pkmn_id,
+			"mother": self.mother.pkmn_id if isinstance(self.mother, Pokemon) else self.mother, # self.mother if type(self.mother) == type(" ") else self.mother.pkmn_id,
+			"father": self.father.pkmn_id if isinstance(self.father, Pokemon) else self.father, # self.father if type(self.father) == type(" ") else self.father.pkmn_id,
 			"egg_group1": self.egg_group1,
 			"egg_group2": self.egg_group2,
 			"held_item": self.held_item,
@@ -387,6 +387,7 @@ class Pokemon:
 			new_pkmn.held_item = data["held_item"]
 			new_pkmn.mother_id = data["mother"]
 			new_pkmn.father_id = data["father"]
+			new_pkmn.set_room(data["room"])
 			return(new_pkmn)
 		else:
 			print("How did you even... manage to call a non-existing species of Pokemon...")
