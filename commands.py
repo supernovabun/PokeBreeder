@@ -1,11 +1,12 @@
 import re
 import sys
 from pokemon import Pokemon
+from egg import Egg
 from trainer import Trainer
 from room import Room
 from item import Item
-from save_manager import SaveManager ## TEST
-from game_state import GameState ## TEST
+from save_manager import SaveManager
+from game_state import GameState
 
 class CommandParser:
 
@@ -118,6 +119,8 @@ class CommandParser:
 						desc_thing = Item.item_id[thing].get_desc()
 					elif thing in Pokemon.pkmn_id.keys():
 						desc_thing = Pokemon.pkmn_id[thing].description
+					elif thing in Egg.egg_id.keys():
+						desc_thing = Egg.egg_id[thing].description
 					else:
 						desc_thing = Trainer.trainer_id[thing].description
 				elif desc_thing == "" and args[0].lower() == re.findall("^[a-zA-Z \\-\\']+", thing)[0].lower():
@@ -127,6 +130,8 @@ class CommandParser:
 						desc_thing = Item.item_id[thing].get_desc()
 					elif thing in Trainer.trainer_id.keys():
 						desc_thing = Trainer.trainer_id[thing].description
+					elif thing in Egg.egg_id.keys():
+						desc_thing = Egg.egg_id[thing].description
 					else:
 						desc_thing = ""
 				elif desc_thing == "" and re.findall(" ".join(args).title(), thing) != []:
@@ -136,19 +141,21 @@ class CommandParser:
 						desc_thing = Item.item_id[thing].get_desc()
 					elif thing in Trainer.trainer_id.keys():
 						desc_thing = Trainer.trainer_id[thing].description
+					elif thing in Egg.egg_id.keys():
+						desc_thing = Egg.egg_id[thing].description
 					else:
 						desc_thing = ""
 			if desc_thing == "":
 				for thing in self.player.inventory:
 					if " ".join(args).title() == thing:
-						desc_thing = Item.item_id[thing].get_desc()
+						desc_thing = Egg.egg_id[thing].description if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
 						break
 					elif desc_thing == "" and args[0] == re.findall("\\d+$", thing)[0]:
-						desc_thing = Item.item_id[thing].get_desc()
+						desc_thing = Egg.egg_id[thing].description if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
 					elif desc_thing == "" and args[0].lower() == re.findall("^[a-zA-Z \\-\\']+", thing)[0].lower():
-						desc_thing = Item.item_id[thing].get_desc()
+						desc_thing = Egg.egg_id[thing].description if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
 					elif desc_thing == "" and re.findall(" ".join(args).title(), thing) != []:
-						desc_thing = Item.item_id[thing].get_desc()
+						desc_thing = Egg.egg_id[thing].description if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
 			desc_thing = desc_thing if desc_thing != "" else "What are you trying to look at?"
 			print(desc_thing)
 
@@ -176,8 +183,9 @@ class CommandParser:
 				self.player.energy -= 1
 				self.player.room = self.player.room.exits[cmd]
 				for each_item in self.player.inventory:
-					each_item = Item.item_id[each_item]
-					each_item.room = self.player.room
+					each_item = Item.item_id[each_item] if each_item in Item.item_id.keys() else Egg.egg_id[each_item]
+					print(f"Held_By: {each_item.held_by}")
+					each_item.move_to_room(self.player.room)
 				for each_pkmn in self.player.entourage:
 					each_pkmn.room.remove_inventory(each_pkmn.pkmn_id)
 					each_pkmn.room = self.player.room
@@ -320,14 +328,17 @@ class CommandParser:
 	def handle_get(self, args):
 		if len(args) == 1:
 			if args[0].title() in self.player.room.inventory and args[0].title() not in Pokemon.pkmn_id.keys():
-				if not Item.item_id[args[0]].gettable:
+				if isinstance(args[0], Item) and not Item.item_id[args[0]].gettable:
 					print(f"Try as you might, you cannot pick up {Item.item_id[args[0]].get_article()}{args[0]}.")
 					return
 				if self.player.check_energy():
 					self.player.energy -= 1
 					to_remove = self.player.room.remove_inventory(args[0])
-					item_article = self.get_article(to_remove)
+					to_remove_thing = Item.item_id[to_remove] if to_remove in Item.item_id.keys() else Egg.egg_id[to_remove].egg_id
+					to_remove_thing.held_by = self.player.trainer_id
+					item_article = self.get_article(to_remove) if not isinstance(to_remove, Egg) else ""
 					self.player.add_inventory(to_remove)
+					to_remove = re.sub("\\d+$", "", to_remove).lower()
 					print(f"You pick up {item_article}{to_remove}.")
 			elif [i for i in self.player.room.inventory if re.findall(args[0].title(), i) != []] != []:
 				to_remove = [i for i in self.player.room.inventory if re.findall(args[0].title(), i) != []]
@@ -340,15 +351,18 @@ class CommandParser:
 					if to_remove[0] in Item.item_id.keys() and not Item.item_id[to_remove[0]].gettable:
 						print(f"Try as you might, you cannot pick up {Item.item_id[to_remove[0]].get_article()}{Item.item_id[to_remove[0]].name.lower()}.")
 						return
-					elif to_remove[0] not in Item.item_id.keys():
+					elif to_remove[0] not in Item.item_id.keys() and to_remove[0] not in Egg.egg_id.keys():
 						print(f"You can't pick up {to_remove[0]}")
 						return
 					if self.player.check_energy():
 						self.player.energy -= 1
 						to_remove = self.player.room.remove_inventory(to_remove[0])
-						item_article = self.get_article(to_remove)
+						to_remove_thing = Item.item_id[to_remove] if to_remove in Item.item_id.keys() else Egg.egg_id[to_remove]
+						to_remove_thing.held_by = self.player.trainer_id
+						item_article = self.get_article(to_remove) if not isinstance(to_remove, Egg) else ""
 						self.player.add_inventory(to_remove)
-						print(f"You pick up {item_article}{to_remove[:-4].lower()}.")
+						to_remove = re.sub("\\d+$", "", to_remove).lower()
+						print(f"You pick up {item_article}{to_remove}.")
 		elif "from" in args:
 			to_get = " ".join(args[:args.index("from")]).title()
 			from_where = " ".join(args[args.index("from")+1:]).title()
@@ -394,20 +408,31 @@ class CommandParser:
 					print("You throw your hands out towards the ground to no effect.")
 				else:
 					to_drop = self.player.remove_inventory(to_drop)
-					self.player.room.add_inventory(to_drop)					
-					print(f"You drop {self.get_article(to_drop[0])}{to_drop[0][:-4].lower()}." if len(to_drop) == 1 else "You throw everything you have to the floor.")
+					#self.player.room.add_inventory(to_drop)
+					for each_thing in to_drop:
+						if each_thing in Item.item_id.keys():
+							each_thing = Item.item_id[each_thing]
+						else:
+							each_thing = Egg.egg_id[each_thing]
+						each_thing.held_by = False
+						each_thing.move_to_room(self.player.room)
+					print(f"You drop {self.get_article(to_drop[0])}{re.sub("\\d+$", "", to_drop[0]).lower()}." if len(to_drop) == 1 else "You throw everything you have to the floor.")
 			elif " ".join(args).title() in self.player.inventory:
 				to_drop = " ".join(args)
 				to_drop = self.player.remove_inventory(to_drop)
-				self.player.room.add_inventory(to_drop)					
-				print(f"You drop {self.get_article(to_drop[0])}{to_drop[0][:-4].lower()}.")
+				to_drop_thing = Item.item_id[to_drop] if to_drop in Item.item_id.keys() else Egg.egg_id[to_drop]
+				to_drop_thing.held_by = False
+				to_drop_thing.move_to_room(self.player.room)
+				print(f"You drop {self.get_article(to_drop)}{re.sub("\\d+$", "", to_drop).lower()}.")
 			elif [i for i in self.player.inventory if re.findall(" ".join(args).title(), i) != []] != []:
 				to_drop = " ".join(args).title()
 				to_drop = [i for i in self.player.inventory if re.findall(to_drop, i) != []]
 				to_drop = to_drop[0]
 				to_drop = self.player.remove_inventory(to_drop)
-				self.player.room.add_inventory(to_drop)					
-				print(f"You drop {self.get_article(to_drop[0] if type(to_drop) != type("string") else to_drop)}{to_drop[0][:-4].lower() if type(to_drop) != type("string") else to_drop[:-4].lower()}.")
+				to_drop_thing = Item.item_id[to_drop] if to_drop in Item.item_id.keys() else Egg.egg_id[to_drop]
+				to_drop_thing.held_by = False
+				to_drop_thing.move_to_room(self.player.room)		
+				print(f"You drop {self.get_article(to_drop[0] if not isinstance(to_drop, str) else to_drop)}{re.sub("\\d+$", "", to_drop[0]).lower() if not isinstance(to_drop, str) else re.sub("\\d+$", "", to_drop).lower()}.")
 			else:
 				print(f"You do not have {self.get_article(" ".join(args))}{" ".join(args)} to drop.")
 		else:
@@ -576,10 +601,11 @@ class CommandParser:
 	def handle_save(self, args):
 		if not args:
 			trainer_ids = list(Trainer.trainer_id.values())[1:]
+			egg_ids = list(Egg.egg_id.values())
 			pkmn_ids = list(Pokemon.pkmn_id.values())
 			room_ids = list(Room.rooms.values())
 			item_ids = list(Item.item_id.values())
-			save_state = GameState(self.player, trainer_ids, pkmn_ids, room_ids, item_ids)
+			save_state = GameState(self.player, trainer_ids, egg_ids, pkmn_ids, room_ids, item_ids)
 			self.saver.save_game(save_state)
 		pass
 
