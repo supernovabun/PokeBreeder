@@ -1,13 +1,15 @@
 from trainer import Trainer
+from egg import Egg
 from pokemon import Pokemon
 from room import Room
 from item import Item
 from worldgen import generate_stages
 
 class GameState:
-    def __init__(self, trainer, created_trainers, created_pokemon, created_rooms, created_items):
+    def __init__(self, trainer, created_trainers, created_eggs, created_pokemon, created_rooms, created_items):
         self.trainer = trainer
         self.created_trainers = created_trainers # List of Trainer instances
+        self.created_eggs = created_eggs         # List of Egg instances
         self.created_pokemon = created_pokemon   # List of Pokemon instances
         self.created_rooms = created_rooms       # List of Room instances
         self.created_items = created_items       # List of Item instances
@@ -16,6 +18,7 @@ class GameState:
         return({
             "trainer": self.trainer.to_dict(),
             "created_trainers": [t.to_dict() for t in self.created_trainers],
+            "created_eggs": [e.to_dict() for e in self.created_eggs],
             "created_pokemon": [p.to_dict() for p in self.created_pokemon],
             "created_rooms": [r.to_dict() for r in self.created_rooms],
             "created_items": [i.to_dict() for i in self.created_items]
@@ -23,10 +26,11 @@ class GameState:
 
     @staticmethod
     def from_dict(data):
+        created_rooms = [Room.from_dict(r) for r in data["created_rooms"]]
         trainer = Trainer.from_dict(data["trainer"])
         created_trainers = [Trainer.from_dict(t) for t in data["created_trainers"]]
         created_pokemon = [Pokemon.from_dict(p) for p in data["created_pokemon"]]
-        created_rooms = [Room.from_dict(r) for r in data["created_rooms"]]
+        created_eggs = [Egg.from_dict(e) for e in data["created_eggs"]]
         created_items = [Item.from_dict(i) for i in data["created_items"]]
 
         trainer.room = trainer.room if type(trainer.room) != type(" ") else Room.rooms[trainer.room]
@@ -45,11 +49,6 @@ class GameState:
         for index in range(len(created_rooms)):
             for k, v in created_rooms[index].exits.items():
                 created_rooms[index].exits[k] = Room.rooms[v]
-
-        """### Removing this to test it's working
-        Room.rooms = {}
-        for each_room in created_rooms:
-            Room.rooms[each_room.room_id] = each_room"""
 
         for pkmn in created_pokemon:
             pkmn.trainer = Trainer.trainer_id[pkmn.trainer] if pkmn.trainer != "None" else pkmn.trainer
@@ -70,4 +69,4 @@ class GameState:
 
         generate_stages()
 
-        return(GameState(trainer, created_trainers, created_pokemon, created_rooms, created_items))
+        return(GameState(trainer, created_trainers, created_eggs, created_pokemon, created_rooms, created_items))
