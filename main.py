@@ -1,4 +1,5 @@
 from trainer import Trainer
+from egg import Egg
 from pokemon import Pokemon
 from item import Item
 from room import Room
@@ -16,7 +17,7 @@ def main():
 		player_name = input("What name do you want to go by?\n> ")
 		player = Trainer(player_name, None)
 		player.room = generate_world("new", player)
-		game_state = GameState(player, list(Trainer.trainer_id.values())[1:], list(Pokemon.pkmn_id.values()), list(Room.rooms.values()), list(Item.item_id.values()))
+		game_state = GameState(player, list(Trainer.trainer_id.values())[1:], list(Egg.egg_id.values()), list(Pokemon.pkmn_id.values()), list(Room.rooms.values()), list(Item.item_id.values()))
 		return(game_state)
 	elif first_decision in ["two", "load", "load game", "2"]:
 		loaded = saver.load_game()
@@ -24,7 +25,7 @@ def main():
 			print("Creating a new game!")
 			loaded = Trainer("Player", None)
 			loaded.room = generate_world("new", loaded)
-			game_state = GameState(loaded, list(Trainer.trainer_id.values())[1:], list(Pokemon.pkmn_id.values()), list(Room.rooms.values()), list(Item.item_id.values()))
+			game_state = GameState(loaded, list(Trainer.trainer_id.values())[1:], list(Egg.egg_id.values()), list(Pokemon.pkmn_id.values()), list(Room.rooms.values()), list(Item.item_id.values()))
 		return(loaded)
 	else:
 		sys.exit()
