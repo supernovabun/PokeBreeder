@@ -1,6 +1,6 @@
+import re
 import random
 from room import Room ## Test
-from indiv import *
 
 class Trainer:
 	trainer_id = {}
@@ -39,17 +39,22 @@ class Trainer:
 		if new_pokemon.species not in self.pokedex:
 			self.pokedex.append(new_pokemon.species)
 
-	def add_inventory(self, item):
-		item = item if type(item) == type("") else item.item_id
-		self.inventory.append(item)
+	def add_inventory(self, thing):
+		if type(thing).__str__ == "Egg":
+			thing = thing.egg_id
+		elif type(thing).__str__ == "Item":
+			thing = thing.item_id
+		#thing = item if type(item) == type("") else item.item_id
+		self.inventory.append(thing)
 
 	def check_inventory(self, search_string=None):
 		counts = {}
 		for i in sorted(self.inventory):
-			if i[:-4] in counts.keys():
-				counts[i[:-4]] += 1
+			i = re.sub("\\d+$", "", i)
+			if i in counts.keys():
+				counts[i] += 1
 			else:
-				counts[i[:-4]] = 1
+				counts[i] = 1
 		for k, v in counts.items():
 			print(f"  {"{:03d}".format(v)} ... {k}")
 		if len(counts.keys()) == 0:
@@ -122,6 +127,18 @@ class Trainer:
 			print("Your body screams for sleep that you have not permitted it. How are you supposed to take care of Pokemon if you can't take care of yourself?")
 
 	def to_dict(self):
+		"""
+		#############
+		### DEBUG ###
+		#############
+		presave_inventory = []
+		for i in self.inventory:
+			if isinstance(i, str):
+				presave_inventory.append(i)
+			else:
+				print("Crap, how'd this get in there?: {i}")
+		### END DEBUG ###
+		"""
 		return({
 			"trainer_id": self.trainer_id,
 			"name": self.name,
