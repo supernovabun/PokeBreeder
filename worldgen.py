@@ -1,6 +1,7 @@
 from room import Room
 from item import Item
 from trainer import Trainer
+from egg import Egg
 from indiv import *
 from pokemon_registry import *
 
@@ -14,15 +15,15 @@ def generate_world(player_type, player):
 	return(starting_stage)
 
 def new_world(player):
+	aether = Room("Aether", id_num="Aether000")
+	aether.set_verbose("How did you even get in here!?")
 	print("Welcome to the wonderful world of Pokemon!")
 	print("Through some method or another to be decided later, you got a Pokemon! You're getting a Bulbasaur, to be precise.")
 	print("In the future, you'll be able to choose from:")
 	player_starter_pkmn = list_starters()
 
 	starting_room = new_home(player)
-
-	aether = Room("Aether", id_num="Aether000")
-	aether.set_verbose("How did you even get in here!?")
+		
 	aether.set_exits({"out":starting_room})
 
 	#############
@@ -31,9 +32,12 @@ def new_world(player):
 	mom = Ivysaur("Mommy", sex="F")
 	dad = Venusaur("Daddy", sex="M")
 	testBulba = mom.breed(dad)
+	testBulba = testBulba.hatch() # NEW TEST AAA
 	testBulba.set_trainer(player)
 	player.add_pokemon(testBulba)
 	testBulba.set_room(room=starting_room)
+	testEgg = Egg("Bulbasaur", list(Room.rooms.values())[3])
+	#print(f"The debug egg is located in {testEgg.room.room_id}")
 	### end debug
 	### the debug should be replaced when we make it so that you can actually pick your starter but there's a cool *253* starters to pick from so that'll be a while
 
@@ -338,6 +342,7 @@ def list_starters():
 		"Frigibax",
 		"Woobat"
 	]
+	starter_list = sorted(starter_list)
 	starters = []
 	starter_list_split = int((len(starter_list)-1)/3) + (1 if (len(starter_list)-1)%3 > 0 else 0)
 	for i, starter_pkmn in enumerate(starter_list, start=1):
