@@ -1,5 +1,4 @@
 import re
-from item import Item
 
 class Room:
 	rooms = {}
@@ -38,12 +37,14 @@ class Room:
 			self.inventory.append(str(to_add))
 
 	def remove_inventory(self, to_remove):
-		if type(to_remove) == type([]):
+		if isinstance(to_remove, list):
 			for i in to_remove:
-				i = i if type(i) == type("string") else i.item_id
+				i = i if isinstance(i, str) else i.item_id
 				self.inventory.pop(self.inventory.index(i))
 		else:
-			to_remove = to_remove if type(to_remove) == type("string") else to_remove.item_id
+			#to_remove = to_remove if isinstance(to_remove, str) else to_remove.item_id
+			if not isinstance(to_remove, str):
+				to_remove = to_remove.egg_id if to_remove.egg_id else to_remove.item_id
 			self.inventory.pop(self.inventory.index(to_remove))
 		return(to_remove)
 
