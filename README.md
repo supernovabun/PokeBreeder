@@ -27,10 +27,14 @@ As of writing this, you can run main.py without error (unless you're creative). 
 
 ## To Work On
 
-### Egg
+### Individual Pokemon layouts
 
-Gotta make eggs. Not sure how best to do this. Maybe as a subclass of Pokemon... probably as a subclass of Pokemon...
+Before I make more Pokemon: do I want to move the types and base stats to the initialization of the individual species instead of the specific individuals? I think I do...
 
 ### Evolution
 
 This needs to create a new instance of next stage of Pokemon, set the IVs the same, the nature the same, the genetics the same, and replace the new Pokemon in its place in the Pokemon list with the same id number but new Pokemon name (Bulbasaur000001 becomes Ivysaur000001).
+
+### More Breeding Mechanics
+
+Gotta create a dictionary called "pkmn_affection" in the Pokemon class to keep track of how different Pokemon feel about each other (gosh this is an awful idea I've started why am I still making this game) so that they don't automatically breed with each other if shoved in a room together. I do know that I want it to be that Pokemon only breed in pastures.
