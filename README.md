@@ -1,6 +1,13 @@
 # PokeBreeder
 This ~~ambitious~~ insane project is for creating a single-player text game where you breed and raise Pokemon! I don't have everything figured out yet, but it's a start.
 
+## Running the Game
+
+1. Download the whole thing. ALL OF IT.
+2. Shove it in a folder of your choosing
+3. Either open terminal or command prompt in that folder, or open terminal or command prompt and navigate to that folder
+4. Enter `python main.py` (make sure you have some version of Python3)
+
 ## Currently...
 
 As of writing this, you can run main.py without error (unless you're creative). You can move between a few rooms I've created, you have a Bulbasaur that's just sitting in your bedroom, and there's a painting in the hallway and a secret in another room. You can also look at Bulbasaur, your debug-mom, the rooms, and any objects I've put in. You can grab the painting too, but why would you ever do that? You can also speak, but nothing really cool happens there... unless...
