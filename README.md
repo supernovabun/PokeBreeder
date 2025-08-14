@@ -34,6 +34,10 @@ As of writing this, you can run main.py without error (unless you're creative). 
 
 ## To Work On
 
+### Following mechanics
+
+Right now you lose all your Pokemon on quitting (as in they stop following you), but honestly... fair. It's not necessarily something that I need to code.
+
 ### Individual Pokemon layouts
 
 Before I make more Pokemon: do I want to move the types and base stats to the initialization of the individual species instead of the specific individuals? I think I do...
