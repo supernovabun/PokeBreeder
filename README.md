@@ -35,8 +35,8 @@ As of writing this, you can run main.py without error (unless you're creative). 
 ## To Work On
 
 ### Following mechanics
-
-Right now you lose all your Pokemon on quitting (as in they stop following you), but honestly... fair. It's not necessarily something that I need to code.
+**Edit:**Psych, I fixed the following mechanics at 4:34 AM EST on 14 Aug 2025. Just gotta upload it!
+~~Right now you lose all your Pokemon on quitting (as in they stop following you), but honestly... fair. It's not necessarily something that I need to code.~~
 
 ### Individual Pokemon layouts
 
