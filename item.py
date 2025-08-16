@@ -55,9 +55,10 @@ class Item:
 			if self.inventory:
 				self.inventory.append(to_add.item_id)
 			else:
-				self.inventory = [to_add.item_id]
+				self.inventory = [to_add.item_id] if isinstance(to_add, Item) else [to_add.egg_id]
 			to_add.in_somewhere = self
-			print(f"You carefully place {to_add.get_article()}{to_add.name.lower()} inside of {self.get_article()}{self.name.lower()}.")
+			article = to_add.get_article() if isinstance(to_add, Item) else "an "
+			print(f"You carefully place {article}{to_add.name.lower()} inside of {self.get_article()}{self.name.lower()}.")
 		else:
 			print(f"{self.name[0]+self.name[1:].lower()} will not fit {to_add.get_article()}{to_add.name.lower()}, no matter how hard you may try.")
 
