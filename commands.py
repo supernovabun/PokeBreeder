@@ -10,9 +10,10 @@ from game_state import GameState
 
 class CommandParser:
 
-	def __init__(self, player):
+	def __init__(self, player, game_state):
 		self.player = player
 		self.saver = SaveManager()
+		self.game_state = game_state
 		self.commands = {
 			"look": self.handle_look,
 			"l": self.handle_look,
@@ -184,7 +185,7 @@ class CommandParser:
 				self.player.room = self.player.room.exits[cmd]
 				for each_item in self.player.inventory:
 					each_item = Item.item_id[each_item] if each_item in Item.item_id.keys() else Egg.egg_id[each_item]
-					print(f"Held_By: {each_item.held_by}")
+					#print(f"Held_By: {each_item.held_by}")
 					each_item.move_to_room(self.player.room)
 				for each_pkmn in self.player.entourage:
 					each_pkmn.room.remove_inventory(each_pkmn.pkmn_id)
@@ -352,7 +353,7 @@ class CommandParser:
 						print(f"Try as you might, you cannot pick up {Item.item_id[to_remove[0]].get_article()}{Item.item_id[to_remove[0]].name.lower()}.")
 						return
 					elif to_remove[0] not in Item.item_id.keys() and to_remove[0] not in Egg.egg_id.keys():
-						print(f"You can't pick up {to_remove[0]}")
+						print(f"You can't pick up {to_remove[0]}.")
 						return
 					if self.player.check_energy():
 						self.player.energy -= 1
@@ -451,17 +452,23 @@ class CommandParser:
 					where_put = Item.item_id[where_put]
 				elif [w for w in self.player.room.inventory if re.findall(where_put, w) != []] != []:
 					where_put = [w for w in self.player.room.inventory if re.findall(where_put, w) != []][0]
-					where_put = Item.item_id[where_put] if where_put in Item.item_id.keys() else Pokemon.pkmn_id[where_put]
+					if where_put[-6:].isdigit():
+						where_put = Pokemon.pkmn_id[where_put]
+					elif where_put[-4:].isdigit():
+						where_put = Item.item_id[where_put]
+					else:
+						where_put = Trainer.trainer_id[where_put]
+					#where_put = Item.item_id[where_put] if where_put in Item.item_id.keys() else Pokemon.pkmn_id[where_put]
 				else:
 					print(f"Where are you trying to put {to_put.lower()}?")
 					return()
 				if [i for i in self.player.inventory if re.findall(to_put, i) != []] != []:
 					to_put = [i for i in self.player.inventory if re.findall(to_put, i) != []][0]
-					to_put = Item.item_id[to_put]
+					to_put = Item.item_id[to_put] if not to_put[-8:].isdigit() else Egg.egg_id[to_put]
 					if isinstance(where_put, Item) and where_put.container:
 						if self.player.check_energy():
 							self.player.energy -= 1
-							self.player.remove_inventory(to_put.item_id)
+							self.player.remove_inventory(to_put.item_id) if isinstance(to_put, Item) else self.player.remove_inventory(to_put.egg_id)
 						else:
 							return
 					else:
@@ -503,7 +510,8 @@ class CommandParser:
 		pass
 
 	def handle_sleep(self, args):
-		self.player.sleep()
+		new_date = self.game_state.advance_day()
+		self.player.sleep(new_date)
 
 	def handle_use(self, args):
 		if not args:
@@ -605,7 +613,7 @@ class CommandParser:
 			pkmn_ids = list(Pokemon.pkmn_id.values())
 			room_ids = list(Room.rooms.values())
 			item_ids = list(Item.item_id.values())
-			save_state = GameState(self.player, trainer_ids, egg_ids, pkmn_ids, room_ids, item_ids)
+			save_state = GameState(self.player, trainer_ids, egg_ids, pkmn_ids, room_ids, item_ids, self.game_state.day)
 			self.saver.save_game(save_state)
 		pass
 
