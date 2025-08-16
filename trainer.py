@@ -102,7 +102,10 @@ class Trainer:
 			energy_string = f"{DARK_RED}Struggling{RESET}"
 		return(energy_string)
 
-	def sleep(self):
+	def sleep(self, new_day_str="Default"):
+		BOLD = "\033[1m"
+		RESET = "\033[0m"
+		PALE_PINK = "\x1b[38;5;225m"
 		if self.room.brief == "Master bedroom in a quaint house.":
 			regain = 100
 			print("You crawl into bed and under your covers, pulling your bed sheet up to your chin. You close your eyes and slip off to sweet slumber.")
@@ -113,8 +116,10 @@ class Trainer:
 			regain = 50
 			print("With little dignity, you collapse to the ground and sleep where you are. You're going to feel that in the morning.")
 		self.energy += min(regain, 100)
-		[pkmn.new_day() for pkmn in self.pokemon.values()]
-		print("---")
+
+		print(f"{PALE_PINK} ,~-=**********{"*"*len(new_day_str)}**=-~,{RESET}")
+		print(f"{PALE_PINK}.~-=*{RESET}{BOLD} It is now {new_day_str}{RESET}{PALE_PINK} *=-~.{RESET}")
+		print(f"{PALE_PINK} '~-=**********{"*"*len(new_day_str)}**=-~'{RESET}")
 		if self.energy == 100:
 			print("You wake up the next morning full of energy. Let's take care of Pokemon again, today!")
 		elif self.energy >= 80:
@@ -125,6 +130,9 @@ class Trainer:
 			print("Everything in your body begs you to sleep just a bit longer. Alas, you are awake.")
 		else:
 			print("Your body screams for sleep that you have not permitted it. How are you supposed to take care of Pokemon if you can't take care of yourself?")
+
+	def on_new_day(self):
+		pass
 
 	def to_dict(self):
 		"""
@@ -147,7 +155,7 @@ class Trainer:
 			"pokemon": list(self.pokemon.keys()),
 			"pokedex": self.pokedex,
 			"inventory": self.inventory,
-			"entourage": [ent.to_dict() for ent in self.entourage],
+			"entourage": [ent.pkmn_id for ent in self.entourage],
 			"energy": self.energy,
 			"description": self.description,
 			"room": self.room.room_id
@@ -164,7 +172,7 @@ class Trainer:
 		trainer.pokemon = data["pokemon"]
 		trainer.pokedex = data["pokedex"]
 		trainer.inventory = data["inventory"]
-		trainer.entourage = [Pokemon.from_dict(p) for p in data["entourage"]]
+		trainer.entourage = data["entourage"]
 		trainer.energy = data["energy"]
 		trainer.description = data["description"]
 		trainer.room_string = data["room"]
