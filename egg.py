@@ -7,6 +7,7 @@ class Egg:
     egg_num = 1
     def __init__(self, species, room, mother=None, father=None, days_remaining=100, egg_id=None):
         self.species = species  # e.g. Bulbasaur
+        self.name = "Egg"
         self.mother = mother if isinstance(mother, str) or mother == None else mother.pkmn_id
         self.father = father if isinstance(father, str) or father == None else father.pkmn_id
         self.days_remaining = days_remaining
