@@ -22,7 +22,9 @@ def new_world(player):
 	print("In the future, you'll be able to choose from:")
 	player_starter_pkmn = list_starters()
 
-	starting_room = new_home(player)
+	print("The world awaits you!")
+
+	starting_room = world_layout()
 		
 	aether.set_exits({"out":starting_room})
 
@@ -43,7 +45,12 @@ def new_world(player):
 
 	return(starting_room)
 
-def new_home(player):
+def world_layout():
+
+	################
+	# PLAYER HOUSE #
+	################
+
 	home_master_bedroom = Room("Master bedroom in a quaint house")
 	home_master_bedroom.set_verbose("A cozy room bearing no hints of profession, there isn't much space to move around. A bed covered in maroon blankets sits against the wall, underneath the lone window in the room. Next to it is a small wooden night table, leaving just enough room to climb into bed. The floor is soft cream-colored carpet, and the walls, a faint baby blue.")
 	starting_backpack = Item("A worndown leather backpack", "Misc.", home_master_bedroom, 50, container=True)
@@ -55,7 +62,7 @@ def new_home(player):
 	hallway_painting.set_desc("Blotches and spots of watercolor mark a warped piece of lined paper. Whether the depicted shapes were meant to be abstract art or a more defined form is up for interpretation by the viewer. The paper, taped to cardboard, sits inside a dusty, ornate wooden frame. The artist's shaky, pencil-written initials reside in the lower right corner of the cardboard.")
 
 	home_upstairs_bathroom = Room("A small, uncomfortable bathroom")
-	home_upstairs_bathroom.set_verbose("The stale air in this insufficiently-sized room is marked by the distinct aroma of water. Best efforts to keep this room clean and neat have been done. The lone window on the far wall is open to let some much-needed fresh air inside. The toilet-sink combination sits below a bathroom mirror, and directly adjacent to the combination is a tub that is too small for any adult to sit in comfortably.")
+	home_upstairs_bathroom.set_verbose("The stale air in this insufficiently-sized marine blue room is marked by the distinct aroma of water. Best efforts to keep this room clean and neat have been done. The lone window on the far wall is open to let some much-needed fresh air inside. The toilet-sink combination sits below a bathroom mirror, and directly adjacent to the combination is a tub that is too small for any adult to sit in comfortably.")
 	home_upstairs_toilet = Item("Toilet with a sink on top", "Furniture", home_upstairs_bathroom, 26000, gettable=False, container=True)
 	home_upstairs_toilet.set_desc("A porcelain throne with a wooden seat has a strange attachment: atop and connected to the toilet's tank is a simple sink. The bowl of the sink and the bowl of the toilet itself both have been kept in pristine condition. The plumbing device awaits further use.")
 	home_upstairs_rubber_ducklett = Item("A periwinkle rubber Ducklett", "Misc.", None, 50)
@@ -69,15 +76,97 @@ def new_home(player):
 	home_stairs_top.set_verbose("Brought on a draft, cool air makes its way up a half-turned flight of oak stairs. On one side is a bannister with chipped wood, and the other, a wall covered in floral wallpaper. Much like the bannister, the wooden floor here is chipped, waiting for the chance to lodge pieces of itself in some unsuspecting foot.")
 
 	home_den = Room("Spacious family den")
-	home_den.set_verbose("Large and spacious, this room was recently painted a deep red color that further enhances the warm feeling. A steady flow of air circulates through the room that keeps it at a slightly warm, but not hot, temperature. In the center of the room is a large in-ground sectional couch with a small set of steps descending into a small adjacent space that has room for up to eight people to sit. Towards the back of the room is an oak staircase lined with a too-old wooden bannister. The staircase turns halfway and ascends past where can be seen.")
+	home_den.set_verbose("Large and spacious, this room was recently painted a deep red color that further enhances the warm feeling. A steady flow of air circulates through the room that keeps it at a slightly warm, but not hot, temperature. In the center of the room is a large in-ground sectional couch with a small set of steps descending into a small adjacent space that has room for up to eight people to sit. On the western wall of the room is a door, and to the east is a large archway leading to an expansive kitchen. In the front of the room is a door leading to the porch. Towards the back of the room is an oak staircase lined with a too-old wooden bannister. The staircase turns halfway and ascends past where can be seen.")
+	### Debug Mama ###
 	tempmom = Trainer(f"Your Mother", home_den) ## TEST
 	tempmom.set_desc("A pleasant woman with her long black hair pulled into a side braid.") ## TEST
+	tempmom.set_room()
+	### End Debug Mama ###
+
+	home_downstairs_bathroom = Room("A closet of a bathroom")
+	home_downstairs_bathroom.set_verbose("Offering barely any room for navigation, this bathroom is more a closet with a toilet than anything else. The floor is made of wood and has not been covered with tile, and the walls are all coated white paint that smells fresh. A small window on one wall is barely open, letting barely any humidity out of the room.")
+	home_downstairs_toilet = Item("Toilet with a sink on top", "Furniture", home_downstairs_bathroom, 26000, gettable=False, container=True)
+	home_downstairs_toilet.set_desc("A porcelain throne with a wooden seat has a strange attachment: atop and connected to the toilet's tank is a simple sink. The bowl of the sink and the bowl of the toilet itself both have been kept in pristine condition. The plumbing device awaits further use.")
+
+	home_kitchen = Room("Kitchen from another era")
+	home_kitchen.set_verbose("The wooden floor from the family den comes to an abrupt halt at the entryway to the kitchen. Black and white alternating porcelain tile lines and covers the area of the room in a kind of checkerboard pattern. A long counter that curves has on it a variety of appliances; on one side, there is an oven with stovetop, and the other, a large refrigerator. The windows are bright and welcoming, light unrestricted by the sheer blue-and-white Poke Ball embroided curtains. A window planter is present hanging off the window behind the sink. There is a single door heading out to the east where there is a large shed and an expansive, unkempt field needing tending.")
 
 	home_master_bedroom.set_exits({"east": home_main_hallway})
 	home_main_hallway.set_exits({"west": home_master_bedroom, "north": home_stairs_top, "east": home_upstairs_bathroom})
 	home_upstairs_bathroom.set_exits({"west": home_main_hallway})
 	home_stairs_top.set_exits({"south": home_main_hallway, "down": home_den})
-	home_den.set_exits({"up": home_stairs_top})
+	home_den.set_exits({"west": home_downstairs_bathroom, "east":home_kitchen, "up": home_stairs_top})
+	home_downstairs_bathroom.set_exits({"east": home_den})
+	home_kitchen.set_exits({"west": home_den})
+
+	###################
+	# PLAYER PASTURES #
+	###################
+
+	home_pasture_01 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_01.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_shed = Item("A dilapidated expansive shed", "Furniture", home_pasture_01, 90000, gettable=False, container=True)
+	home_shed.set_desc("Barely providing any shelter from any element, this rusted shed appears to be expandable through some means. It has flaking white paint along the interior and exterior, revealing the oxidized metal beneath.")
+	home_pasture_02 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_02.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_03 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_03.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_04 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_04.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_05 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_05.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_06 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_06.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_07 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_07.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_08 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_08.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_09 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_09.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_10 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_10.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_11 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_11.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_12 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_12.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_13 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_13.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_14 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_14.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_15 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_15.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_16 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_16.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_17 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_17.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_18 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_18.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_19 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_19.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_20 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_20.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_21 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_21.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_22 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_22.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_23 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_23.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_24 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_24.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+	home_pasture_25 = Room("A rolling Pokemon-primed pasture")
+	home_pasture_25.set_verbose("A pasture ready for adjustments on its level land, lush green grass grows freely in a small field. With the right finishing touches, it could become the perfect place for a Pokemon to call home while still remembering its native habitat.")
+
+	home_pasture_01.add_exit("west", home_kitchen)
+	#home_pasture_01.add_exit("south", home_pasture_02) # UNLOCK 1/24
+	#home_pasture_02.add_exit("north", home_pasture_01) # UNLOCK 1/24
+	#home_pasture_01.add_exit("north", home_pasture_03) # UNLOCK 2/24
+	#home_pasture_03.add_exit("south", home_pasture_01) # UNLOCK 2/24
+	#home_pasture_02.add_exit("south", home_pasture_04) # UNLOCK 3/24
+	#home_pasture_04.add_exit("north", home_pasture_02) # UNLOCK 3/24
+	#home_pasture_03.add_exit("north", home_pasture_05) # UNLOCK 4/24
+	#home_pasture_05.add_exit("south", home_pasture_03) # UNLOCK 4/24
+
+	home_kitchen.add_exit("east", home_pasture_01)
 
 	return(home_master_bedroom)
 
