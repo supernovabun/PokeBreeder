@@ -23,9 +23,9 @@ def main():
 		loaded = saver.load_game()
 		if not loaded:
 			print("Creating a new game!")
-			loaded = Trainer("Player", None)
-			loaded.room = generate_world("new", loaded)
-			game_state = GameState(loaded, list(Trainer.trainer_id.values())[1:], list(Egg.egg_id.values()), list(Pokemon.pkmn_id.values()), list(Room.rooms.values()), list(Item.item_id.values()))
+			player = Trainer("Player", None)
+			player.room = generate_world("new", player)
+			loaded = GameState(player, list(Trainer.trainer_id.values())[1:], list(Egg.egg_id.values()), list(Pokemon.pkmn_id.values()), list(Room.rooms.values()), list(Item.item_id.values()))
 		return(loaded)
 	else:
 		sys.exit()
@@ -35,7 +35,7 @@ if __name__ == "__main__":
 	game_state = main()
 	user = game_state.trainer
 
-	parser = CommandParser(user)
+	parser = CommandParser(user, game_state)
 
 	parser.handle_look([])
 	while True:
