@@ -1,6 +1,10 @@
 # PokeBreeder
 This ~~ambitious~~ insane project is for creating a single-player text game where you breed and raise Pokemon! I don't have everything figured out yet, but it's a start.
 
+## Ownership
+
+I made the code, Nintendo and Game Freak own Pokemon. That being said, I'm posting the code publicly, so if you want to play with it or use it to EDUCATE yourself or EXPAND YOUR KNOWLEDGE... feel free.
+
 ## Running the Game
 
 1. Download the whole thing. ALL OF IT.
