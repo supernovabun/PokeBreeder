@@ -552,14 +552,30 @@ class CommandParser:
 		else:
 			to_lose = " ".join(args).title()
 			pkmn_entourage = [i for i in self.player.entourage]
-			pkmn = [p for p in pkmn_entourage if re.findall(to_lose, p.pkmn_id) != []]
-			pkmn = pkmn if pkmn else [p for p in pkmn_entourage if re.findall(to_lose, p.name) != []]
-			pkmn = pkmn if pkmn else None
+			pkmn = []
+			for p in pkmn_entourage:
+				if isinstance(p, str):
+					if re.findall(to_lose, p) != []:
+						pkmn.append(p)
+				else:
+					if re.findall(to_lose, p.pkmn_id) != []:
+						pkmn.append(p.pkmn_id)
+					elif re.findall(to_lose, p.name) != []:
+						pkmn.append(p.name)
+			if pkmn == []:
+				pkmn = None
+
+			who_following = Trainer.trainer_id[self.player] if isinstance(self.player, str) else self.player
+
 			if pkmn:
-				pkmn[0].unfollow(self.player)
-				print(f"{pkmn[0].name} stops following you.")
+				Pokemon.pkmn_id[pkmn[0]].unfollow(who_following)
+				print(f"{pkmn[0]} stops following you.")
 			elif args[0] == "all":
-				[p.unfollow(self.player) for p in pkmn_entourage]
+				for p in pkmn_entourage:
+					if isinstance(p, str):
+						Pokemon.pkmn_id[p].unfollow(who_following)
+					else:
+						p.unfollow(who_following)
 				print("Everyone decides to stop following you.")
 			else:
 				print(f"It doesn't appear {to_lose} is following you.")
