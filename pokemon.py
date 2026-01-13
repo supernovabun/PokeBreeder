@@ -387,6 +387,9 @@ class Pokemon:
 		if self.following:
 			following.entourage.pop(following.entourage.index(self))
 			self.following = None
+		elif following:
+			following.entourage.pop(following.entourage.index(self))
+			self.following = None
 
 	def to_dict(self):
 		if self.trainer:
