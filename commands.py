@@ -121,7 +121,7 @@ class CommandParser:
 					elif thing in Pokemon.pkmn_id.keys():
 						desc_thing = Pokemon.pkmn_id[thing].description
 					elif thing in Egg.egg_id.keys():
-						desc_thing = Egg.egg_id[thing].description
+						desc_thing = Egg.egg_id[thing].get_desc()
 					else:
 						desc_thing = Trainer.trainer_id[thing].description
 				elif desc_thing == "" and args[0].lower() == re.findall("^[a-zA-Z \\-\\']+", thing)[0].lower():
@@ -132,7 +132,7 @@ class CommandParser:
 					elif thing in Trainer.trainer_id.keys():
 						desc_thing = Trainer.trainer_id[thing].description
 					elif thing in Egg.egg_id.keys():
-						desc_thing = Egg.egg_id[thing].description
+						desc_thing = Egg.egg_id[thing].get_desc()
 					else:
 						desc_thing = ""
 				elif desc_thing == "" and re.findall(" ".join(args).title(), thing) != []:
@@ -143,20 +143,20 @@ class CommandParser:
 					elif thing in Trainer.trainer_id.keys():
 						desc_thing = Trainer.trainer_id[thing].description
 					elif thing in Egg.egg_id.keys():
-						desc_thing = Egg.egg_id[thing].description
+						desc_thing = Egg.egg_id[thing].get_desc()
 					else:
 						desc_thing = ""
 			if desc_thing == "":
 				for thing in self.player.inventory:
 					if " ".join(args).title() == thing:
-						desc_thing = Egg.egg_id[thing].description if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
+						desc_thing = Egg.egg_id[thing].get_desc() if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
 						break
 					elif desc_thing == "" and args[0] == re.findall("\\d+$", thing)[0]:
-						desc_thing = Egg.egg_id[thing].description if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
+						desc_thing = Egg.egg_id[thing].get_desc() if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
 					elif desc_thing == "" and args[0].lower() == re.findall("^[a-zA-Z \\-\\']+", thing)[0].lower():
-						desc_thing = Egg.egg_id[thing].description if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
+						desc_thing = Egg.egg_id[thing].get_desc() if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
 					elif desc_thing == "" and re.findall(" ".join(args).title(), thing) != []:
-						desc_thing = Egg.egg_id[thing].description if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
+						desc_thing = Egg.egg_id[thing].get_desc() if thing[-8:].isdigit() else Item.item_id[thing].get_desc()
 			desc_thing = desc_thing if desc_thing != "" else "What are you trying to look at?"
 			print(desc_thing)
 
@@ -185,8 +185,12 @@ class CommandParser:
 				self.player.room = self.player.room.exits[cmd]
 				for each_item in self.player.inventory:
 					each_item = Item.item_id[each_item] if each_item in Item.item_id.keys() else Egg.egg_id[each_item]
-					#print(f"Held_By: {each_item.held_by}")
 					each_item.move_to_room(self.player.room)
+					if isinstance(each_item, Egg):
+						if each_item.held_by == self.player or each_item.held_by == self.player.trainer_id:
+							each_item.steps_remaining -= 1
+							if each_item.steps_remaining <= 0:
+								each_item.hatch()
 				for each_pkmn in self.player.entourage:
 					each_pkmn.room.remove_inventory(each_pkmn.pkmn_id)
 					each_pkmn.room = self.player.room
