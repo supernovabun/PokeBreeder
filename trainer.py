@@ -66,7 +66,13 @@ class Trainer:
 				i = i if type(i) == type("string") else i.item_id
 				self.inventory.pop(self.inventory.index(i))
 		else:
-			to_remove = to_remove if type(to_remove) == type("string") else to_remove.item_id
+			if isinstance(to_remove, str):
+				to_remove = to_remove
+			elif to_remove.item_id:
+				to_remove = to_remove.item_id
+			else:
+				to_remove = to_remove.egg_id
+			#to_remove = to_remove if type(to_remove) == type("string") else to_remove.item_id
 			self.inventory.pop(self.inventory.index(to_remove))
 		return(to_remove)
 
