@@ -103,7 +103,7 @@ class Pokemon:
 		temp_father = other_parent if self.sex == "F" else self
 		baby_species = type(temp_mother).stages[0].species
 
-		return(Egg(species=baby_species, room=temp_mother.room, mother=temp_mother, father=temp_father, days_remaining=100))
+		return(Egg(species=baby_species, room=temp_mother.room, mother=temp_mother, father=temp_father, steps_remaining=100))
 	
 	def set_name(self, new_name):
 		self.name = new_name
@@ -270,6 +270,53 @@ class Pokemon:
 				if food not in self.room.inventory and self.room == self.trainer.room:
 					if food not in self.trainer.inventory:
 						print(f"You don't appear to have a {food.lower()} to feed {self.name}.")
+
+	def evolve(self):
+		if not hasattr(self.__class__, "stages") or not self.__class__.stages:
+			raise ValueError(f"{self.species} has no evolution stages defined.")
+
+		current_stage_index = self.__class__.stages.index(self.__class__)
+
+		if current_stage_index + 1 >= len(self.__class__.stages):
+			print(f"{self.species} is already fully evolved.")
+			return(self)  # No further evolution
+
+		next_class = self.__class__.stages[current_stage_index + 1]
+
+		# Extract the number part of the current pkmn_id (e.g., '000003' from 'Bulbasaur000003')
+		base_number = self.pkmn_id[-6:]  # Assuming the number is always 6 digits long
+		pkmn_id = f"{evolved.species}{base_number}"
+
+		# Create the evolved Pokémon with the correct name and ID
+		evolved = next_class(
+			name=self.species if self.name == self.species else self.name,  # Change name to the next species if needed
+			sex=self.sex,
+			nature=self.nature,
+			pattern=[
+				self.pattern,
+				self.color,
+				self.color_placement,
+				self.color_dilution,
+				self.color_extension,
+				self.inheritance
+			],
+			mother=getattr(self, 'mother', None),
+			father=getattr(self, 'father', None),
+			room=self.room,
+			pkmn_id=pkmn_id # test
+		)
+
+		# Set the new pkmn_id to reflect the next species and keep the original number
+		#evolved.pkmn_id = f"{evolved.species}{base_number}"
+
+		evolved.IVs = copy.deepcopy(self.IVs)
+		evolved.trainer = self.trainer
+		evolved.loved = 50
+
+		Pokemon.pkmn_id[evolved.pkmn_id] = evolved
+		print(f"{self.description}\n{evolved.description}") ### TEST
+
+		return(evolved)
 
 	def new_day(self):
 		self.update_loved()
